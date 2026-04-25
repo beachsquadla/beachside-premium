@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+    <title>Beachside Premium | VIP Studio Tools</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Oswald:wght@400;500;700&family=Anton&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'], 
+                        display: ['Oswald', 'sans-serif'],
+                        urban: ['Anton', 'sans-serif']
+                    },
+                    colors: { trs: { red: '#cc0000', dark: '#0a0a0a', gray: '#1f1f1f' } }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root { scroll-behavior: smooth; }
+        body { 
+            background: #000; 
+            color: #fff; 
+            overflow-x: hidden; 
+            -webkit-overflow-scrolling: touch; 
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', sans-serif;
+        }
+        a, button, input, select { touch-action: manipulation; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        /* Loading spinner */
+        #preloader {
+            position: fixed; inset: 0; z-index: 10000;
+            background: #000; display: flex;
+            align-items: center; justify-content: center;
+            transition: opacity 0.3s;
+        }
+        #preloader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .spinner { width: 40px; height: 40px; border: 3px solid #1f1f1f; border-top: 3px solid #cc0000; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Auth forms */
+        .auth-input {
+            width: 100%; background: #111; border: 1px solid #333; border-radius: 8px;
+            padding: 12px 16px; color: #fff; font-size: 14px; outline: none;
+            transition: border-color 0.2s;
+        }
+        .auth-input:focus { border-color: #cc0000; }
+        .auth-input::placeholder { color: #555; }
+        .auth-btn {
+            width: 100%; background: #cc0000; color: #fff; padding: 14px; border: none;
+            border-radius: 8px; font-family: 'Oswald', sans-serif; font-size: 14px;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .auth-btn:hover { background: #fff; color: #000; }
+        .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Cards */
+        .premium-card {
+            background: #0a0a0a; border: 1px solid #1f1f1f; border-radius: 12px;
+            padding: 24px; transition: all 0.3s;
+        }
+        .premium-card:hover { border-color: #cc0000; }
+        .tool-card {
+            background: #0a0a0a; border: 1px solid #1f1f1f; border-radius: 12px;
+            padding: 20px; transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .tool-card:hover { border-color: #cc0000; }
+        .usage-bar { width: 100%; height: 6px; background: #1f1f1f; border-radius: 3px; overflow: hidden; }
+        .usage-bar-fill { height: 100%; background: #cc0000; border-radius: 3px; transition: width 0.5s; }
+        .badge {
+            display: inline-block; background: #cc0000; color: #fff;
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.1em; padding: 3px 8px; border-radius: 4px;
+        }
+
+        /* Tab system */
+        .view-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .view-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Coming soon overlay */
+        .coming-soon {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7); display: flex;
+            align-items: center; justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen">
+
+    <!-- Preloader -->
+    <div id="preloader"><div class="spinner"></div></div>
+
+    <!-- Navbar -->
+    <header class="fixed top-0 w-full z-40 bg-[#0a0a0a]/95 border-b border-white/5" id="navbar">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="https://beachside-website.vercel.app" class="flex items-center gap-3 group cursor-pointer">
+                <span class="font-urban font-bold text-lg md:text-xl tracking-widest text-white uppercase">Beachside <span class="text-trs-red">✦ Premium</span></span>
+            </a>
+            <div class="flex items-center gap-4">
+                <span id="nav-user-status" class="text-xs text-gray-500 hidden md:inline"></span>
+                <button type="button" id="nav-auth-btn" onclick="navigateTo('view-login')" class="text-xs uppercase tracking-widest text-trs-red border border-trs-red px-3 py-1.5 rounded hover:bg-trs-red hover:text-white transition cursor-pointer hidden">Sign In</button>
+                <button type="button" id="nav-logout-btn" onclick="handleLogout()" class="text-xs uppercase tracking-widest text-gray-400 hover:text-trs-red transition cursor-pointer hidden">Logout</button>
+                <button type="button" id="nav-dashboard-btn" onclick="navigateTo('view-dashboard')" class="text-xs uppercase tracking-widest text-white hover:text-trs-red transition cursor-pointer hidden">Dashboard</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===================== VIEW: LOGIN ===================== -->
+    <div id="view-login" class="view-section active min-h-screen bg-black flex items-center justify-center px-6 pt-20">
+        <div class="w-full max-w-md">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-display font-bold uppercase tracking-widest text-white">Premium Studio</h2>
+                <p class="text-gray-500 text-sm mt-2">VIP access for Beachside clients</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex justify-center gap-0 mb-8 border-b border-white/10">
+                <button type="button" id="tab-login-btn" onclick="switchAuthTab('login')" class="pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition cursor-pointer">Sign In</button>
+                <button type="button" id="tab-register-btn" onclick="switchAuthTab('register')" class="pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition cursor-pointer">Register</button>
+            </div>
+
+            <!-- Error -->
+            <div id="auth-error" class="hidden bg-red-900/20 border border-red-500/50 text-red-200 text-xs p-4 mb-4 rounded-lg"></div>
+
+            <!-- Login Form -->
+            <div id="form-login" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Email</label>
+                    <input type="email" id="login-email" class="auth-input" placeholder="your@email.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Password</label>
+                    <input type="password" id="login-password" class="auth-input" placeholder="••••••••">
+                </div>
+                <button type="button" onclick="handleLogin()" class="auth-btn">Sign In</button>
+            </div>
+
+            <!-- Register Form -->
+            <div id="form-register" class="hidden space-y-5">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Name</label>
+                    <input type="text" id="reg-name" class="auth-input" placeholder="Your name">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Email</label>
+                    <input type="email" id="reg-email" class="auth-input" placeholder="your@email.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Password</label>
+                    <input type="password" id="reg-password" class="auth-input" placeholder="Min 6 characters">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Invite Code</label>
+                    <input type="text" id="reg-invite" class="auth-input uppercase" placeholder="BEACH-XXX-XXXX">
+                </div>
+                <button type="button" onclick="handleRegister()" class="auth-btn">Create Account</button>
+            </div>
+
+            <!-- Loading -->
+            <div id="auth-loading" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+                <div class="text-center"><div class="spinner mb-4"></div><p class="text-trs-red text-xs font-display uppercase tracking-widest">Please wait...</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== VIEW: DASHBOARD ===================== -->
+    <div id="view-dashboard" class="view-section hidden min-h-screen bg-black pt-24 pb-12">
+        <div class="max-w-6xl mx-auto px-6">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-10">
+                <div>
+                    <h2 class="text-3xl font-display font-bold uppercase tracking-widest text-white">
+                        Welcome, <span id="welcome-name" class="text-trs-red">VIP</span>
+                    </h2>
+                    <p class="text-gray-500 text-sm mt-1" id="plan-badge">Premium Plan</p>
+                </div>
+                <button type="button" onclick="handleLogout()" class="text-xs uppercase tracking-widest text-trs-red border border-trs-red px-3 py-1.5 rounded hover:bg-white hover:text-black transition cursor-pointer">Logout</button>
+            </div>
+
+            <!-- Usage -->
+            <div class="premium-card mb-10">
+                <div class="flex justify-between items-center mb-4">
+                    <div><h3 class="font-display uppercase tracking-widest text-white text-sm">Generation Credits</h3></div>
+                    <span class="badge" id="usage-text">0 / 50</span>
+                </div>
+                <div class="usage-bar"><div class="usage-bar-fill" id="usage-bar" style="width:0%"></div></div>
+                <p class="text-gray-600 text-xs mt-3">Each generation uses 1 credit. Contact Beachside to top up.</p>
+            </div>
+
+            <!-- Tools -->
+            <h3 class="text-xl font-display font-bold uppercase tracking-widest text-white mb-6">Studio Tools</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Stem Separation -->
+                <div class="tool-card">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="w-12 h-12 bg-trs-red/20 rounded-lg flex items-center justify-center shrink-0"><i data-lucide="mic-2" class="w-6 h-6 text-trs-red"></i></div>
+                        <div><h4 class="font-display uppercase tracking-widest text-white text-sm mb-1">Stem Separation</h4><p class="text-gray-500 text-xs">Extract vocals, drums, bass, and other instruments from any track.</p></div>
+                    </div>
+                    <div class="coming-soon rounded-xl"><div class="text-center"><i data-lucide="lock" class="w-8 h-8 text-trs-red mx-auto mb-2"></i><p class="text-xs font-display uppercase tracking-widest text-white">Coming Soon</p></div></div>
+                </div>
+
+                <!-- Text to Music -->
+                <div class="tool-card">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="w-12 h-12 bg-trs-red/20 rounded-lg flex items-center justify-center shrink-0"><i data-lucide="wand-2" class="w-6 h-6 text-trs-red"></i></div>
+                        <div><h4 class="font-display uppercase tracking-widest text-white text-sm mb-1">Text to Music</h4><p class="text-gray-500 text-xs">Describe a vibe and generate original music with AI.</p></div>
+                    </div>
+                    <div class="coming-soon rounded-xl"><div class="text-center"><i data-lucide="lock" class="w-8 h-8 text-trs-red mx-auto mb-2"></i><p class="text-xs font-display uppercase tracking-widest text-white">Coming Soon</p></div></div>
+                </div>
+
+                <!-- AI Revamp -->
+                <div class="tool-card">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="w-12 h-12 bg-trs-red/20 rounded-lg flex items-center justify-center shrink-0"><i data-lucide="audio-lines" class="w-6 h-6 text-trs-red"></i></div>
+                        <div><h4 class="font-display uppercase tracking-widest text-white text-sm mb-1">AI Revamp</h4><p class="text-gray-500 text-xs">Upload a track and apply style presets — warm vinyl, modern radio, lo-fi, and more.</p></div>
+                    </div>
+                    <div class="coming-soon rounded-xl"><div class="text-center"><i data-lucide="lock" class="w-8 h-8 text-trs-red mx-auto mb-2"></i><p class="text-xs font-display uppercase tracking-widest text-white">Coming Soon</p></div></div>
+                </div>
+
+                <!-- Beat Generator -->
+                <div class="tool-card">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="w-12 h-12 bg-trs-red/20 rounded-lg flex items-center justify-center shrink-0"><i data-lucide="music" class="w-6 h-6 text-trs-red"></i></div>
+                        <div><h4 class="font-display uppercase tracking-widest text-white text-sm mb-1">Beat Variations</h4><p class="text-gray-500 text-xs">Upload a beat and generate AI-powered variations in different styles.</p></div>
+                    </div>
+                    <div class="coming-soon rounded-xl"><div class="text-center"><i data-lucide="lock" class="w-8 h-8 text-trs-red mx-auto mb-2"></i><p class="text-xs font-display uppercase tracking-widest text-white">Coming Soon</p></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-[#0a0a0a] py-8 px-6 border-t border-white/5 text-center mt-auto">
+        <p class="text-gray-600 text-xs uppercase tracking-widest">Beachside Studios Premium Portal</p>
+        <a href="https://beachside-website.vercel.app" class="text-gray-500 text-xs hover:text-trs-red transition mt-2 inline-block">← Back to Beachside Studios</a>
+    </footer>
+
+    <script>
+        // ==========================================
+        // CONFIG
+        // ==========================================
+        const PREMIUM_API = 'https://lightning-maintenance-showcase-statement.trycloudflare.com/api/premium';
+
+        // ==========================================
+        // INIT
+        // ==========================================
+        window.addEventListener('load', () => document.getElementById('preloader').classList.add('hidden'));
+        setTimeout(() => document.getElementById('preloader').classList.add('hidden'), 5000);
+        document.addEventListener('DOMContentLoaded', () => { 
+            lucide.createIcons(); 
+            checkSession(); 
+        });
+
+        // ==========================================
+        // NAVIGATION
+        // ==========================================
+        function navigateTo(viewId) {
+            document.querySelectorAll('.view-section').forEach(x => {
+                x.classList.remove('active');
+                x.classList.add('hidden');
+            });
+            const target = document.getElementById(viewId);
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('active');
+            }
+            window.scrollTo(0, 0);
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // AUTH
+        // ==========================================
+        let currentUser = null;
+
+        function showAuthError(msg) {
+            const err = document.getElementById('auth-error');
+            err.textContent = msg;
+            err.classList.remove('hidden');
+            setTimeout(() => err.classList.add('hidden'), 5000);
+        }
+
+        function showAuthLoading(show) {
+            document.getElementById('auth-loading').classList.toggle('hidden', !show);
+        }
+
+        function switchAuthTab(tab) {
+            const login = document.getElementById('form-login');
+            const register = document.getElementById('form-register');
+            const loginBtn = document.getElementById('tab-login-btn');
+            const registerBtn = document.getElementById('tab-register-btn');
+
+            if (tab === 'login') {
+                login.classList.remove('hidden');
+                register.classList.add('hidden');
+                loginBtn.className = 'pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition cursor-pointer';
+                registerBtn.className = 'pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition cursor-pointer';
+            } else {
+                login.classList.add('hidden');
+                register.classList.remove('hidden');
+                loginBtn.className = 'pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition cursor-pointer';
+                registerBtn.className = 'pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition cursor-pointer';
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            if (!email || !password) { showAuthError('Please fill in all fields'); return; }
+
+            showAuthLoading(true);
+            try {
+                const res = await fetch(PREMIUM_API + '/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                showAuthLoading(false);
+                if (!res.ok) { showAuthError(data.error || 'Login failed'); return; }
+                currentUser = data.user;
+                updateUI();
+                navigateTo('view-dashboard');
+            } catch(e) {
+                showAuthLoading(false);
+                showAuthError('Connection error. Try again.');
+            }
+        }
+
+        async function handleRegister() {
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const inviteCode = document.getElementById('reg-invite').value.trim().toUpperCase();
+
+            if (!name || !email || !password || !inviteCode) { showAuthError('Fill in all fields'); return; }
+            if (password.length < 6) { showAuthError('Password must be 6+ characters'); return; }
+
+            showAuthLoading(true);
+            try {
+                const res = await fetch(PREMIUM_API + '/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ name, email, password, inviteCode })
+                });
+                const data = await res.json();
+                showAuthLoading(false);
+                if (!res.ok) { showAuthError(data.error || 'Registration failed'); return; }
+                currentUser = data.user;
+                updateUI();
+                navigateTo('view-dashboard');
+            } catch(e) {
+                showAuthLoading(false);
+                showAuthError('Connection error. Try again.');
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await fetch(PREMIUM_API + '/logout', { method: 'POST', credentials: 'include' });
+            } catch(e) {}
+            currentUser = null;
+            updateUI();
+            navigateTo('view-login');
+        }
+
+        async function checkSession() {
+            try {
+                const res = await fetch(PREMIUM_API + '/me', { credentials: 'include' });
+                const data = await res.json();
+                if (data.authenticated && data.user) {
+                    currentUser = data.user;
+                    updateUI();
+                    navigateTo('view-dashboard');
+                }
+            } catch(e) {}
+        }
+
+        function updateUI() {
+            const loginBtn = document.getElementById('nav-auth-btn');
+            const logoutBtn = document.getElementById('nav-logout-btn');
+            const dashBtn = document.getElementById('nav-dashboard-btn');
+            const status = document.getElementById('nav-user-status');
+
+            if (currentUser) {
+                loginBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                dashBtn.classList.remove('hidden');
+                status.textContent = currentUser.name || currentUser.email;
+                status.classList.remove('hidden');
+
+                // Dashboard info
+                document.getElementById('welcome-name').textContent = currentUser.name || currentUser.email;
+                document.getElementById('plan-badge').textContent = (currentUser.plan || 'Premium').toUpperCase() + ' Plan';
+                const used = currentUser.generationsUsed || 0;
+                const max = currentUser.maxGenerations || 50;
+                document.getElementById('usage-text').textContent = used + ' / ' + max;
+                document.getElementById('usage-bar').style.width = Math.min(100, (used / max) * 100) + '%';
+            } else {
+                loginBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                dashBtn.classList.add('hidden');
+                status.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
