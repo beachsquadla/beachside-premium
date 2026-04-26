@@ -209,6 +209,11 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 const API = 'https://api.beachsiderecordingstudio.us/api/premium';
 let user = null;
 
+function getToken(){return localStorage.getItem('bs_token')}
+function setToken(t){localStorage.setItem('bs_token',t)}
+function clearToken(){localStorage.removeItem('bs_token')}
+function authHeaders(){const t=getToken();return t?{'Content-Type':'application/json','x-auth-token':t}:{'Content-Type':'application/json'}}
+
 // Init
 window.addEventListener('load',()=>document.getElementById('preloader').classList.add('hidden'));
 setTimeout(()=>document.getElementById('preloader').classList.add('hidden'),5000);
@@ -240,6 +245,11 @@ if(btn){btn.style.background='#cc0000';btn.style.color='#fff';btn.style.borderCo
 setTimeout(()=>lucide.createIcons(),50)
 }
 
+// Token helpers
+function setToken(t){if(t){localStorage.setItem('bst_token',t)}}
+function getToken(){return localStorage.getItem('bst_token')||''}
+function clearToken(){localStorage.removeItem('bst_token')}
+
 // Auth
 function authErr(m){const e=document.getElementById('auth-err');e.textContent=m;e.classList.remove('hidden');setTimeout(()=>e.classList.add('hidden'),5000)}
 function authLoad(s){document.getElementById('auth-load').classList.toggle('hidden',!s)}
@@ -249,10 +259,10 @@ const email=document.getElementById('lemail').value.trim(),pass=document.getElem
 if(!email||!pass){authErr('Fill in all fields');return}
 authLoad(true);
 try{
-const r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({email,password})});
+const r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
 const d=await r.json();authLoad(false);
 if(!r.ok){authErr(d.error||'Login failed');return}
-user=d.user;updateUI();showView('dashboard')
+setToken(d.token);user=d.user;updateUI();showView('dashboard')
 }catch(e){authLoad(false);authErr('Connection error')}
 }
 
@@ -262,21 +272,22 @@ if(!n||!e||!p||!iv){authErr('Fill in all fields');return}
 if(p.length<6){authErr('Password must be 6+ characters');return}
 authLoad(true);
 try{
-const r=await fetch(API+'/register',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({name:n,email:e,password:p,inviteCode:iv})});
+const r=await fetch(API+'/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,email:e,password:p,inviteCode:iv})});
 const d=await r.json();authLoad(false);
 if(!r.ok){authErr(d.error||'Registration failed');return}
-user=d.user;updateUI();showView('dashboard')
+setToken(d.token);user=d.user;updateUI();showView('dashboard')
 }catch(e){authLoad(false);authErr('Connection error')}
 }
 
 async function logout(){
-try{await fetch(API+'/logout',{method:'POST',credentials:'include'})}catch(e){}
-user=null;updateUI();showView('login')
+try{await fetch(API+'/logout',{method:'POST',headers:{'x-auth-token':getToken()}})}catch(e){}
+clearToken();user=null;updateUI();showView('login')
 }
 
 async function checkSession(){
+const t=getToken();if(!t)return;
 try{
-const r=await fetch(API+'/me',{credentials:'include'});
+const r=await fetch(API+'/me',{headers:{'x-auth-token':t}});
 const d=await r.json();
 if(d.authenticated&&d.user){user=d.user;updateUI();showView('dashboard')}
 }catch(e){}
@@ -311,7 +322,7 @@ const dur=document.getElementById('ttm-duration').value;
 document.getElementById('ttm-btn').disabled=true;
 hideResult('ttm');showStatus('ttm','Generating music with AI...');
 try{
-const r=await fetch(API+'/text-to-music',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({prompt,duration:parseInt(dur)})});
+const r=await fetch(API+'/text-to-music',{method:'POST',headers:{'Content-Type':'application/json','x-auth-token':getToken()},body:JSON.stringify({prompt,duration:parseInt(dur)})});
 const d=await r.json();
 hideStatus('ttm');
 if(!r.ok){alert('Error: '+(d.error||'Generation failed'));document.getElementById('ttm-btn').disabled=false;return}
@@ -334,7 +345,7 @@ document.getElementById('ss-btn').disabled=true;
 hideResult('ss');showStatus('ss','Separating stems...');
 const fd=new FormData();fd.append('audio',file);
 try{
-const r=await fetch(API+'/stem-separate',{method:'POST',credentials:'include',body:fd});
+const r=await fetch(API+'/stem-separate',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
 const d=await r.json();
 hideStatus('ss');
 if(!r.ok){alert('Error: '+(d.error||'Separation failed'));document.getElementById('ss-btn').disabled=false;return}
@@ -362,7 +373,7 @@ document.getElementById('rv-btn').disabled=true;
 hideResult('rv');showStatus('rv','Revamping track...');
 const fd=new FormData();fd.append('audio',file);fd.append('style',style);
 try{
-const r=await fetch(API+'/revamp',{method:'POST',credentials:'include',body:fd});
+const r=await fetch(API+'/revamp',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
 const d=await r.json();
 hideStatus('rv');
 if(!r.ok){alert('Error: '+(d.error||'Revamp failed'));document.getElementById('rv-btn').disabled=false;return}
@@ -386,7 +397,7 @@ document.getElementById('bv-btn').disabled=true;
 hideResult('bv');showStatus('bv','Generating beat variation...');
 const fd=new FormData();fd.append('audio',file);fd.append('mood',mood);
 try{
-const r=await fetch(API+'/beat-variations',{method:'POST',credentials:'include',body:fd});
+const r=await fetch(API+'/beat-variations',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
 const d=await r.json();
 hideStatus('bv');
 if(!r.ok){alert('Error: '+(d.error||'Generation failed'));document.getElementById('bv-btn').disabled=false;return}
