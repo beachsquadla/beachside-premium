@@ -209,208 +209,198 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 const API = 'https://api.beachsiderecordingstudio.us/api/premium';
 let user = null;
 
-function getToken(){return localStorage.getItem('bs_token')}
-function setToken(t){localStorage.setItem('bs_token',t)}
-function clearToken(){localStorage.removeItem('bs_token')}
-function authHeaders(){const t=getToken();return t?{'Content-Type':'application/json','x-auth-token':t}:{'Content-Type':'application/json'}}
+// Token helpers (MUST be defined before any code that uses them)
+function setToken(t){if(t)localStorage.setItem('bstoken',t)}
+function getToken(){return localStorage.getItem('bstoken')||''}
+function clearToken(){localStorage.removeItem('bstoken')}
 
 // Init
-window.addEventListener('load',()=>document.getElementById('preloader').classList.add('hidden'));
-setTimeout(()=>document.getElementById('preloader').classList.add('hidden'),5000);
-document.addEventListener('DOMContentLoaded',()=>{lucide.createIcons();checkSession()});
+window.addEventListener('load',function(){var p=document.getElementById('preloader');if(p)p.classList.add('hidden')});
+setTimeout(function(){var p=document.getElementById('preloader');if(p)p.classList.add('hidden')},5000);
+document.addEventListener('DOMContentLoaded',function(){lucide.createIcons();checkSession()});
 
 // Navigation
 function showView(id){
-document.querySelectorAll('.view').forEach(v=>{v.classList.remove('active');v.classList.add('hidden')});
-const el=document.getElementById('view-'+id);
-if(el){el.classList.remove('hidden');el.classList.add('active')}
-window.scrollTo(0,0);setTimeout(()=>lucide.createIcons(),50)
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');v.classList.add('hidden')});
+  var el=document.getElementById('view-'+id);
+  if(el){el.classList.remove('hidden');el.classList.add('active')}
+  window.scrollTo(0,0);setTimeout(function(){lucide.createIcons()},50)
 }
 
 function switchTab(t){
-document.getElementById('form-login').classList.toggle('hidden',t!=='login');
-document.getElementById('form-reg').classList.toggle('hidden',t!=='register');
-if(t==='login'){document.getElementById('ltab').className='pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition';document.getElementById('rtab').className='pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition'}
-else{document.getElementById('ltab').className='pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition';document.getElementById('rtab').className='pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition'}
+  var lf=document.getElementById('form-login'),rf=document.getElementById('form-reg'),lt=document.getElementById('ltab'),rt=document.getElementById('rtab');
+  if(t==='login'){
+    lf.classList.remove('hidden');rf.classList.add('hidden');
+    lt.className='pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition';
+    rt.className='pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition'
+  } else {
+    lf.classList.add('hidden');rf.classList.remove('hidden');
+    lt.className='pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition';
+    rt.className='pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition'
+  }
 }
 
-// Tool tabs
+// Tool tabs - FIXED: no event.currentTarget reference
 function openTool(tool){
-document.querySelectorAll('.tool-section').forEach(s=>s.classList.remove('active'));
-document.querySelectorAll('.tool-tab').forEach(b=>{b.style.background='transparent';b.style.color='';b.style.borderColor='rgba(255,255,255,0.2)'});
-const el=document.getElementById('tool-'+tool);
-if(el){el.classList.add('active');el.classList.remove('hidden')}
-const btn=event.currentTarget||document.querySelector(`[onclick*="${tool}"]`);
-if(btn){btn.style.background='#cc0000';btn.style.color='#fff';btn.style.borderColor='#cc0000'}
-setTimeout(()=>lucide.createIcons(),50)
+  document.querySelectorAll('.tool-section').forEach(function(s){s.classList.remove('active');s.classList.add('hidden')});
+  document.querySelectorAll('.tool-tab').forEach(function(b){b.style.background='transparent';b.style.color='';b.style.borderColor='rgba(255,255,255,0.2)'});
+  var el=document.getElementById('tool-'+tool);
+  if(el){el.classList.remove('hidden');el.classList.add('active')}
+  var btns=document.querySelectorAll('.tool-tab');var idx=0;
+  if(tool==='text-to-music')idx=0;else if(tool==='stem-separate')idx=1;else if(tool==='revamp')idx=2;else if(tool==='beat-variations')idx=3;
+  if(btns&&btns[idx]){btns[idx].style.background='#cc0000';btns[idx].style.color='#fff';btns[idx].style.borderColor='#cc0000'}
+  setTimeout(function(){lucide.createIcons()},50)
 }
 
-// Token helpers
-function setToken(t){if(t){localStorage.setItem('bst_token',t)}}
-function getToken(){return localStorage.getItem('bst_token')||''}
-function clearToken(){localStorage.removeItem('bst_token')}
-
-// Auth
-function authErr(m){const e=document.getElementById('auth-err');e.textContent=m;e.classList.remove('hidden');setTimeout(()=>e.classList.add('hidden'),5000)}
-function authLoad(s){document.getElementById('auth-load').classList.toggle('hidden',!s)}
+function authErr(m){
+  var e=document.getElementById('auth-err');
+  if(!e)return;
+  e.textContent=m;e.classList.remove('hidden');
+  setTimeout(function(){e.classList.add('hidden')},5000)
+}
+function authLoad(s){var el=document.getElementById('auth-load');if(el)el.classList.toggle('hidden',!s)}
 
 async function login(){
-const email=document.getElementById('lemail').value.trim(),pass=document.getElementById('lpass').value;
-if(!email||!pass){authErr('Fill in all fields');return}
-authLoad(true);
-try{
-const r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
-const d=await r.json();authLoad(false);
-if(!r.ok){authErr(d.error||'Login failed');return}
-setToken(d.token);user=d.user;updateUI();showView('dashboard')
-}catch(e){authLoad(false);authErr('Connection error')}
+  var email=document.getElementById('lemail');
+  var pass=document.getElementById('lpass');
+  if(!email||!pass){authErr('Fill in all fields');return}
+  var e=email.value.trim(),p=pass.value;
+  if(!e||!p){authErr('Fill in all fields');return}
+  authLoad(true);
+  try{
+    var r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,password:p})});
+    var d=await r.json();authLoad(false);
+    if(!r.ok){authErr(d.error||'Login failed');return}
+    setToken(d.token);user=d.user;updateUI();showView('dashboard')
+  }catch(err){
+    authLoad(false);
+    console.error('Login error:',err);
+    authErr('Connection error - check console')
+  }
 }
 
 async function register(){
-const n=document.getElementById('rname').value.trim(),e=document.getElementById('remail').value.trim(),p=document.getElementById('rpass').value,iv=document.getElementById('rinvite').value.trim().toUpperCase();
-if(!n||!e||!p||!iv){authErr('Fill in all fields');return}
-if(p.length<6){authErr('Password must be 6+ characters');return}
-authLoad(true);
-try{
-const r=await fetch(API+'/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,email:e,password:p,inviteCode:iv})});
-const d=await r.json();authLoad(false);
-if(!r.ok){authErr(d.error||'Registration failed');return}
-setToken(d.token);user=d.user;updateUI();showView('dashboard')
-}catch(e){authLoad(false);authErr('Connection error')}
+  var n=document.getElementById('rname'),e=document.getElementById('remail'),p=document.getElementById('rpass'),iv=document.getElementById('rinvite');
+  if(!n||!e||!p||!iv){authErr('Fill in all fields');return}
+  var name=n.value.trim(),email=e.value.trim(),pass=p.value,code=iv.value.trim().toUpperCase();
+  if(!name||!email||!pass||!code){authErr('Fill in all fields');return}
+  if(pass.length<6){authErr('Password must be 6+ characters');return}
+  authLoad(true);
+  try{
+    var r=await fetch(API+'/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,email:email,password:pass,inviteCode:code})});
+    var d=await r.json();authLoad(false);
+    if(!r.ok){authErr(d.error||'Registration failed');return}
+    setToken(d.token);user=d.user;updateUI();showView('dashboard')
+  }catch(err){authLoad(false);console.error('Register error:',err);authErr('Connection error')}
 }
 
 async function logout(){
-try{await fetch(API+'/logout',{method:'POST',headers:{'x-auth-token':getToken()}})}catch(e){}
-clearToken();user=null;updateUI();showView('login')
+  try{var t=getToken();if(t)await fetch(API+'/logout',{method:'POST',headers:{'x-auth-token':t}})}catch(e){}
+  clearToken();user=null;updateUI();showView('login')
 }
 
 async function checkSession(){
-const t=getToken();if(!t)return;
-try{
-const r=await fetch(API+'/me',{headers:{'x-auth-token':t}});
-const d=await r.json();
-if(d.authenticated&&d.user){user=d.user;updateUI();showView('dashboard')}
-}catch(e){}
+  var t=getToken();if(!t)return;
+  try{
+    var r=await fetch(API+'/me',{headers:{'x-auth-token':t}});
+    var d=await r.json();
+    if(d.authenticated&&d.user){user=d.user;updateUI();showView('dashboard')}
+  }catch(e){}
 }
 
 function updateUI(){
-const si=document.getElementById('nav-signin'),lo=document.getElementById('nav-logout'),da=document.getElementById('nav-dash'),st=document.getElementById('nav-status');
-if(user){
-si.classList.add('hidden');lo.classList.remove('hidden');da.classList.remove('hidden');
-st.textContent=user.name||user.email;st.classList.remove('hidden');
-document.getElementById('welcome').textContent=user.name||user.email;
-document.getElementById('plan-text').textContent=(user.plan||'Premium').toUpperCase()+' Plan';
-const u=user.generationsUsed||0,m=user.maxGenerations||50;
-document.getElementById('usage-txt').textContent=u+' / '+m;
-document.getElementById('usage-bar').style.width=Math.min(100,(u/m)*100)+'%'
-}else{
-si.classList.remove('hidden');lo.classList.add('hidden');da.classList.add('hidden');st.classList.add('hidden')
-}
+  var si=document.getElementById('nav-signin'),lo=document.getElementById('nav-logout'),da=document.getElementById('nav-dash'),st=document.getElementById('nav-status'),wel=document.getElementById('welcome'),plan=document.getElementById('plan-text'),utxt=document.getElementById('usage-txt'),ubar=document.getElementById('usage-bar');
+  if(user){
+    if(si)si.classList.add('hidden');if(lo)lo.classList.remove('hidden');if(da)da.classList.remove('hidden');
+    if(st){st.textContent=user.name||user.email;st.classList.remove('hidden')}
+    if(wel)wel.textContent=user.name||user.email;
+    if(plan)plan.textContent=(user.plan||'Premium').toUpperCase()+' Plan';
+    var u=user.generationsUsed||0,m=user.maxGenerations||50;
+    if(utxt)utxt.textContent=u+' / '+m;
+    if(ubar)ubar.style.width=Math.min(100,(u/m)*100)+'%'
+  }else{
+    if(si)si.classList.remove('hidden');if(lo)lo.classList.add('hidden');if(da)da.classList.add('hidden');if(st)st.classList.add('hidden')
+  }
 }
 
-// Status helpers
-function showStatus(id,msg){const el=document.getElementById(id+'-status');el.classList.add('active');document.getElementById(id+'-status-txt').textContent=msg}
-function hideStatus(id){document.getElementById(id+'-status').classList.remove('active')}
-function showResult(id){document.getElementById(id+'-result').classList.add('active')}
-function hideResult(id){document.getElementById(id+'-result').classList.remove('active')}
+function showStatus(id,msg){var el=document.getElementById(id+'-status');if(el){el.classList.add('active');var t=document.getElementById(id+'-status-txt');if(t)t.textContent=msg}}
+function hideStatus(id){var el=document.getElementById(id+'-status');if(el)el.classList.remove('active')}
+function showResult(id){var el=document.getElementById(id+'-result');if(el)el.classList.add('active')}
+function hideResult(id){var el=document.getElementById(id+'-result');if(el)el.classList.remove('active')}
 
-// ====== TEXT TO MUSIC ======
+// Text to Music
 async function generateMusic(){
-const prompt=document.getElementById('ttm-prompt').value.trim();
-if(!prompt){alert('Enter a prompt first');return}
-const dur=document.getElementById('ttm-duration').value;
-document.getElementById('ttm-btn').disabled=true;
-hideResult('ttm');showStatus('ttm','Generating music with AI...');
-try{
-const r=await fetch(API+'/text-to-music',{method:'POST',headers:{'Content-Type':'application/json','x-auth-token':getToken()},body:JSON.stringify({prompt,duration:parseInt(dur)})});
-const d=await r.json();
-hideStatus('ttm');
-if(!r.ok){alert('Error: '+(d.error||'Generation failed'));document.getElementById('ttm-btn').disabled=false;return}
-const audio=document.getElementById('ttm-audio');
-audio.src=d.audioUrl;audio.play();
-showResult('ttm');
-const used=d.generationsUsed||user.generationsUsed||0,max=d.maxGenerations||user.maxGenerations||50;
-if(user){user.generationsUsed=used;user.maxGenerations=max;updateUI()}
-}catch(e){hideStatus('ttm');alert('Generation failed. Try again.')}
-document.getElementById('ttm-btn').disabled=false
+  var prompt=document.getElementById('ttm-prompt');if(!prompt)return;
+  var txt=prompt.value.trim();if(!txt){alert('Enter a prompt first');return}
+  var dur=document.getElementById('ttm-duration');var d=dur?parseInt(dur.value):15;
+  var btn=document.getElementById('ttm-btn');if(btn)btn.disabled=true;
+  hideResult('ttm');showStatus('ttm','Generating music with AI...');
+  try{
+    var r=await fetch(API+'/text-to-music',{method:'POST',headers:{'Content-Type':'application/json','x-auth-token':getToken()},body:JSON.stringify({prompt:txt,duration:d})});
+    var data=await r.json();hideStatus('ttm');
+    if(!r.ok){alert('Error: '+(data.error||'Generation failed'));if(btn)btn.disabled=false;return}
+    var audio=document.getElementById('ttm-audio');
+    if(audio){audio.src=data.audioUrl;audio.play()}
+    showResult('ttm');
+    if(user&&data.generationsUsed!==undefined){user.generationsUsed=data.generationsUsed;user.maxGenerations=data.maxGenerations;updateUI()}
+  }catch(e){hideStatus('ttm');alert('Generation failed. Try again.')}
+  if(btn)btn.disabled=false
 }
 
-// ====== STEM SEPARATION ======
-function ssFileSelected(e){const f=e.target.files[0];if(!f)return;document.getElementById('ss-file-info').classList.remove('hidden');document.getElementById('ss-file-info').textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}
-
+function ssFileSelected(e){var f=e.target.files[0];if(!f)return;var info=document.getElementById('ss-file-info');if(info){info.classList.remove('hidden');info.textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}}
 async function stemSeparate(){
-const file=document.getElementById('ss-file').files[0];
-if(!file){alert('Upload an audio file first');return}
-document.getElementById('ss-btn').disabled=true;
-hideResult('ss');showStatus('ss','Separating stems...');
-const fd=new FormData();fd.append('audio',file);
-try{
-const r=await fetch(API+'/stem-separate',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
-const d=await r.json();
-hideStatus('ss');
-if(!r.ok){alert('Error: '+(d.error||'Separation failed'));document.getElementById('ss-btn').disabled=false;return}
-const container=document.getElementById('ss-stems');container.innerHTML='';
-if(d.stems){
-Object.entries(d.stems).forEach(([name,url])=>{
-container.innerHTML+='<div class="flex items-center justify-between bg-[#111] p-2 rounded-lg"><span class="text-xs text-white uppercase tracking-widest">'+name+'</span><audio src="'+url+'" controls style="height:32px;border-radius:4px;width:140px"></audio></div>'
-})
-}
-showResult('ss');
-if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
-}catch(e){hideStatus('ss');alert('Separation failed. Try again.')}
-document.getElementById('ss-btn').disabled=false
+  var file=document.getElementById('ss-file');if(!file||!file.files[0]){alert('Upload an audio file first');return}
+  var f=file.files[0];var btn=document.getElementById('ss-btn');if(btn)btn.disabled=true;
+  hideResult('ss');showStatus('ss','Separating stems...');
+  var fd=new FormData();fd.append('audio',f);
+  try{
+    var r=await fetch(API+'/stem-separate',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
+    var d=await r.json();hideStatus('ss');
+    if(!r.ok){alert('Error: '+(d.error||'Separation failed'));if(btn)btn.disabled=false;return}
+    var c=document.getElementById('ss-stems');if(c){c.innerHTML='';if(d.stems){Object.keys(d.stems).forEach(function(k){c.innerHTML+='<div class=\"flex items-center justify-between bg-[#111] p-2 rounded-lg\"><span class=\"text-xs text-white uppercase tracking-widest\">'+k+'</span><audio src=\"'+d.stems[k]+'\" controls style=\"height:32px;border-radius:4px;width:140px\"></audio></div>'})}}
+    showResult('ss');if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
+  }catch(e){hideStatus('ss');alert('Separation failed. Try again.')}
+  if(btn)btn.disabled=false
 }
 
-// ====== AI REVAMP ======
-function rvFileSelected(e){const f=e.target.files[0];if(!f)return;document.getElementById('rv-file-info').classList.remove('hidden');document.getElementById('rv-file-info').textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}
-
+function rvFileSelected(e){var f=e.target.files[0];if(!f)return;var info=document.getElementById('rv-file-info');if(info){info.classList.remove('hidden');info.textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}}
 async function revampTrack(){
-const file=document.getElementById('rv-file').files[0];
-if(!file){alert('Upload an audio file first');return}
-const style=document.getElementById('rv-style').value;
-const styleNames={'modern-radio':'Modern Radio','lo-fi':'Lo-Fi / Chill','warm-vinyl':'Warm Vinyl','underground-rap':'Underground Rap','acoustic-session':'Acoustic Session','electronic-club':'Electronic Club'};
-document.getElementById('rv-btn').disabled=true;
-hideResult('rv');showStatus('rv','Revamping track...');
-const fd=new FormData();fd.append('audio',file);fd.append('style',style);
-try{
-const r=await fetch(API+'/revamp',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
-const d=await r.json();
-hideStatus('rv');
-if(!r.ok){alert('Error: '+(d.error||'Revamp failed'));document.getElementById('rv-btn').disabled=false;return}
-const audio=document.getElementById('rv-audio');
-audio.src=d.audioUrl;audio.play();
-document.getElementById('rv-style-name').textContent=styleNames[style]||style;
-showResult('rv');
-if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
-}catch(e){hideStatus('rv');alert('Revamp failed. Try again.')}
-document.getElementById('rv-btn').disabled=false
+  var file=document.getElementById('rv-file');if(!file||!file.files[0]){alert('Upload an audio file first');return}
+  var f=file.files[0];var style=document.getElementById('rv-style');var s=style?style.value:'modern-radio';
+  var styleNames={'modern-radio':'Modern Radio','lo-fi':'Lo-Fi / Chill','warm-vinyl':'Warm Vinyl','underground-rap':'Underground Rap','acoustic-session':'Acoustic Session','electronic-club':'Electronic Club'};
+  var btn=document.getElementById('rv-btn');if(btn)btn.disabled=true;
+  hideResult('rv');showStatus('rv','Revamping track...');
+  var fd=new FormData();fd.append('audio',f);fd.append('style',s);
+  try{
+    var r=await fetch(API+'/revamp',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
+    var d=await r.json();hideStatus('rv');
+    if(!r.ok){alert('Error: '+(d.error||'Revamp failed'));if(btn)btn.disabled=false;return}
+    var audio=document.getElementById('rv-audio');if(audio){audio.src=d.audioUrl;audio.play()}
+    var sn=document.getElementById('rv-style-name');if(sn)sn.textContent=styleNames[s]||s;
+    showResult('rv');if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
+  }catch(e){hideStatus('rv');alert('Revamp failed. Try again.')}
+  if(btn)btn.disabled=false
 }
 
-// ====== BEAT VARIATIONS ======
-function bvFileSelected(e){const f=e.target.files[0];if(!f)return;document.getElementById('bv-file-info').classList.remove('hidden');document.getElementById('bv-file-info').textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}
-
+function bvFileSelected(e){var f=e.target.files[0];if(!f)return;var info=document.getElementById('bv-file-info');if(info){info.classList.remove('hidden');info.textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}}
 async function beatVariations(){
-const file=document.getElementById('bv-file').files[0];
-if(!file){alert('Upload a beat file first');return}
-const mood=document.getElementById('bv-mood').value;
-document.getElementById('bv-btn').disabled=true;
-hideResult('bv');showStatus('bv','Generating beat variation...');
-const fd=new FormData();fd.append('audio',file);fd.append('mood',mood);
-try{
-const r=await fetch(API+'/beat-variations',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
-const d=await r.json();
-hideStatus('bv');
-if(!r.ok){alert('Error: '+(d.error||'Generation failed'));document.getElementById('bv-btn').disabled=false;return}
-const audio=document.getElementById('bv-audio');
-audio.src=d.audioUrl;audio.play();
-showResult('bv');
-if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
-}catch(e){hideStatus('bv');alert('Beat variation failed. Try again.')}
-document.getElementById('bv-btn').disabled=false
+  var file=document.getElementById('bv-file');if(!file||!file.files[0]){alert('Upload a beat file first');return}
+  var f=file.files[0];var mood=document.getElementById('bv-mood');var m=mood?mood.value:'upbeat';
+  var btn=document.getElementById('bv-btn');if(btn)btn.disabled=true;
+  hideResult('bv');showStatus('bv','Generating beat variation...');
+  var fd=new FormData();fd.append('audio',f);fd.append('mood',m);
+  try{
+    var r=await fetch(API+'/beat-variations',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
+    var d=await r.json();hideStatus('bv');
+    if(!r.ok){alert('Error: '+(d.error||'Failed'));if(btn)btn.disabled=false;return}
+    var audio=document.getElementById('bv-audio');if(audio){audio.src=d.audioUrl;audio.play()}
+    showResult('bv');if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
+  }catch(e){hideStatus('bv');alert('Beat variation failed. Try again.')}
+  if(btn)btn.disabled=false
 }
 
-// Init: open first tool
-setTimeout(()=>openTool('text-to-music'),100);
+// Init: open first tool (FIXED - no event.currentTarget dependency)
+setTimeout(function(){openTool('text-to-music')},100);
 </script>
 </body>
 </html>
