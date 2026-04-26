@@ -1,425 +1,405 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#000000">
-    <title>Beachside Premium | VIP Studio Tools</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Oswald:wght@400;500;700&family=Anton&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { 
-                        sans: ['Inter', 'sans-serif'], 
-                        display: ['Oswald', 'sans-serif'],
-                        urban: ['Anton', 'sans-serif']
-                    },
-                    colors: { trs: { red: '#cc0000', dark: '#0a0a0a', gray: '#1f1f1f' } }
-                }
-            }
-        }
-    </script>
-    <style>
-        :root { scroll-behavior: smooth; }
-        body { 
-            background: #000; 
-            color: #fff; 
-            overflow-x: hidden; 
-            -webkit-overflow-scrolling: touch; 
-            -webkit-tap-highlight-color: transparent;
-            font-family: 'Inter', sans-serif;
-        }
-        a, button, input, select { touch-action: manipulation; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0a0a0a; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-
-        /* Loading spinner */
-        #preloader {
-            position: fixed; inset: 0; z-index: 10000;
-            background: #000; display: flex;
-            align-items: center; justify-content: center;
-            transition: opacity 0.3s;
-        }
-        #preloader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .spinner { width: 40px; height: 40px; border: 3px solid #1f1f1f; border-top: 3px solid #cc0000; border-radius: 50%; animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Auth forms */
-        .auth-input {
-            width: 100%; background: #111; border: 1px solid #333; border-radius: 8px;
-            padding: 12px 16px; color: #fff; font-size: 14px; outline: none;
-            transition: border-color 0.2s;
-        }
-        .auth-input:focus { border-color: #cc0000; }
-        .auth-input::placeholder { color: #555; }
-        .auth-btn {
-            width: 100%; background: #cc0000; color: #fff; padding: 14px; border: none;
-            border-radius: 8px; font-family: 'Oswald', sans-serif; font-size: 14px;
-            font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .auth-btn:hover { background: #fff; color: #000; }
-        .auth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* Cards */
-        .premium-card {
-            background: #0a0a0a; border: 1px solid #1f1f1f; border-radius: 12px;
-            padding: 24px; transition: all 0.3s;
-        }
-        .premium-card:hover { border-color: #cc0000; }
-        .tool-card {
-            background: #0a0a0a; border: 1px solid #1f1f1f; border-radius: 12px;
-            padding: 20px; transition: all 0.3s; position: relative; overflow: hidden;
-        }
-        .tool-card:hover { border-color: #cc0000; }
-        .usage-bar { width: 100%; height: 6px; background: #1f1f1f; border-radius: 3px; overflow: hidden; }
-        .usage-bar-fill { height: 100%; background: #cc0000; border-radius: 3px; transition: width 0.5s; }
-        .badge {
-            display: inline-block; background: #cc0000; color: #fff;
-            font-size: 10px; font-weight: 700; text-transform: uppercase;
-            letter-spacing: 0.1em; padding: 3px 8px; border-radius: 4px;
-        }
-
-        /* Tab system */
-        .view-section { display: none; animation: fadeIn 0.3s ease-in-out; }
-        .view-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        
-        /* Coming soon overlay */
-        .coming-soon {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7); display: flex;
-            align-items: center; justify-content: center;
-            backdrop-filter: blur(2px);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Beachside Premium | VIP Studio Tools</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Oswald:wght@400;500;700&family=Anton&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:['Oswald','sans-serif'],urban:['Anton','sans-serif']},colors:{trs:{red:'#cc0000',dark:'#0a0a0a',gray:'#1f1f1f'}}}}}
+</script>
+<style>
+:root{scroll-behavior:smooth}body{background:#000;color:#fff;overflow-x:hidden;-webkit-overflow-scrolling:touch;font-family:'Inter',sans-serif}a,button,input,select{touch-action:manipulation}.auth-input{width:100%;background:#111;border:1px solid #333;border-radius:8px;padding:12px 16px;color:#fff;font-size:14px;outline:none;transition:border-color .2s}.auth-input:focus{border-color:#cc0000}.auth-btn{width:100%;background:#cc0000;color:#fff;padding:14px;border:none;border-radius:8px;font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;cursor:pointer;transition:all .2s}.auth-btn:hover{background:#fff;color:#000}.auth-btn:disabled{opacity:0.5;cursor:not-allowed}.card{background:#0a0a0a;border:1px solid #1f1f1f;border-radius:12px;padding:24px;transition:border-color .3s}.card:hover{border-color:#cc0000}.tool-card{background:#0a0a0a;border:1px solid #1f1f1f;border-radius:12px;padding:20px;transition:all .3s}.tool-card:hover{border-color:#cc0000}.usage-bar{width:100%;height:6px;background:#1f1f1f;border-radius:3px;overflow:hidden}.usage-fill{height:100%;background:#cc0000;border-radius:3px;transition:width .5s}.badge{display:inline-block;background:#cc0000;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 8px;border-radius:4px}.view{display:none;animation:fade .3s}.view.active{display:block}.tool-section{display:none}.tool-section.active{display:block}@keyframes fade{from{opacity:0}to{opacity:1}}.spinner{width:40px;height:40px;border:3px solid #1f1f1f;border-top:3px solid #cc0000;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}#preloader{position:fixed;inset:0;z-index:10000;background:#000;display:flex;align-items:center;justify-content:center;transition:opacity .3s}#preloader.hidden{opacity:0;visibility:hidden;pointer-events:none}.gen-btn{background:#cc0000;color:#fff;padding:10px 24px;border:none;border-radius:8px;font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;cursor:pointer;transition:all .2s;width:100%}.gen-btn:hover{background:#fff;color:#000}.gen-btn:disabled{opacity:0.5;cursor:not-allowed}.gen-status{display:none;align-items:center;gap:8px;padding:10px 14px;background:#111;border:1px solid #333;border-radius:8px;margin-top:12px;font-size:12px;color:#aaa}.gen-status.active{display:flex}.gen-result{display:none;margin-top:12px;padding:12px;background:#111;border:1px solid #333;border-radius:8px}.gen-result.active{display:block}
+</style>
 </head>
 <body class="antialiased min-h-screen">
 
-    <!-- Preloader -->
-    <div id="preloader"><div class="spinner"></div></div>
+<div id="preloader"><div class="spinner"></div></div>
 
-    <!-- Navbar -->
-    <header class="fixed top-0 w-full z-40 bg-[#0a0a0a]/95 border-b border-white/5" id="navbar">
-        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-            <a href="https://beachside-website.vercel.app" class="flex items-center gap-3 group cursor-pointer">
-                <span class="font-urban font-bold text-lg md:text-xl tracking-widest text-white uppercase">Beachside <span class="text-trs-red">✦ Premium</span></span>
-            </a>
-            <div class="flex items-center gap-4">
-                <span id="nav-user-status" class="text-xs text-gray-500 hidden md:inline"></span>
-                <button type="button" id="nav-auth-btn" onclick="navigateTo('view-login')" class="text-xs uppercase tracking-widest text-trs-red border border-trs-red px-3 py-1.5 rounded hover:bg-trs-red hover:text-white transition cursor-pointer hidden">Sign In</button>
-                <button type="button" id="nav-logout-btn" onclick="handleLogout()" class="text-xs uppercase tracking-widest text-gray-400 hover:text-trs-red transition cursor-pointer hidden">Logout</button>
-                <button type="button" id="nav-dashboard-btn" onclick="navigateTo('view-dashboard')" class="text-xs uppercase tracking-widest text-white hover:text-trs-red transition cursor-pointer hidden">Dashboard</button>
-            </div>
-        </div>
-    </header>
+<!-- Nav -->
+<header class="fixed top-0 w-full z-40 bg-[#0a0a0a]/95 border-b border-white/5">
+<div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+<a href="https://beachside-website.vercel.app" class="flex items-center gap-3">
+<span class="font-urban font-bold text-lg md:text-xl tracking-widest text-white uppercase">Beachside <span class="text-trs-red">✦ Premium</span></span>
+</a>
+<div class="flex items-center gap-4">
+<span id="nav-status" class="text-xs text-gray-500 hidden md:inline"></span>
+<button id="nav-signin" onclick="showView('login')" class="text-xs uppercase tracking-widest text-trs-red border border-trs-red px-3 py-1.5 rounded hover:bg-trs-red hover:text-white transition hidden">Sign In</button>
+<button id="nav-logout" onclick="logout()" class="text-xs uppercase tracking-widest text-gray-400 hover:text-trs-red transition hidden">Logout</button>
+<button id="nav-dash" onclick="showView('dashboard')" class="text-xs uppercase tracking-widest text-white hover:text-trs-red transition hidden">Dashboard</button>
+</div>
+</div>
+</header>
 
-    <!-- ===================== VIEW: LOGIN ===================== -->
-    <div id="view-login" class="view-section active min-h-screen bg-black flex items-center justify-center px-6 pt-20">
-        <div class="w-full max-w-md">
-            <div class="text-center mb-10">
-                <h2 class="text-3xl font-display font-bold uppercase tracking-widest text-white">Premium Studio</h2>
-                <p class="text-gray-500 text-sm mt-2">VIP access for Beachside clients</p>
-            </div>
+<!-- ====== VIEW: LOGIN ====== -->
+<div id="view-login" class="view active min-h-screen bg-black flex items-center justify-center px-6 pt-20">
+<div class="w-full max-w-md">
+<div class="text-center mb-10">
+<h2 class="text-3xl font-display font-bold uppercase tracking-widest text-white">Premium Studio</h2>
+<p class="text-gray-500 text-sm mt-2">VIP access for Beachside clients</p>
+</div>
+<div class="flex justify-center gap-0 mb-8 border-b border-white/10">
+<button onclick="switchTab('login')" id="ltab" class="pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition">Sign In</button>
+<button onclick="switchTab('register')" id="rtab" class="pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition">Register</button>
+</div>
+<div id="auth-err" class="hidden bg-red-900/20 border border-red-500/50 text-red-200 text-xs p-4 mb-4 rounded-lg"></div>
+<div id="form-login" class="space-y-5">
+<input type="email" id="lemail" class="auth-input" placeholder="your@email.com">
+<input type="password" id="lpass" class="auth-input" placeholder="••••••••">
+<button onclick="login()" class="auth-btn">Sign In</button>
+</div>
+<div id="form-reg" class="hidden space-y-5">
+<input type="text" id="rname" class="auth-input" placeholder="Your name">
+<input type="email" id="remail" class="auth-input" placeholder="your@email.com">
+<input type="password" id="rpass" class="auth-input" placeholder="Min 6 characters">
+<input type="text" id="rinvite" class="auth-input uppercase" placeholder="BEACH-XXX-XXXX">
+<button onclick="register()" class="auth-btn">Create Account</button>
+</div>
+<div id="auth-load" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+<div class="text-center"><div class="spinner mb-4"></div><p class="text-trs-red text-xs font-display uppercase tracking-widest">Please wait...</p></div>
+</div>
+</div>
+</div>
 
-            <!-- Tabs -->
-            <div class="flex justify-center gap-0 mb-8 border-b border-white/10">
-                <button type="button" id="tab-login-btn" onclick="switchAuthTab('login')" class="pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition cursor-pointer">Sign In</button>
-                <button type="button" id="tab-register-btn" onclick="switchAuthTab('register')" class="pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition cursor-pointer">Register</button>
-            </div>
+<!-- ====== VIEW: DASHBOARD ====== -->
+<div id="view-dashboard" class="view hidden min-h-screen bg-black pt-24 pb-12">
+<div class="max-w-6xl mx-auto px-6">
+<div class="flex justify-between items-center mb-10">
+<div>
+<h2 class="text-3xl font-display font-bold uppercase tracking-widest text-white">Welcome, <span id="welcome" class="text-trs-red">VIP</span></h2>
+<p class="text-gray-500 text-sm mt-1" id="plan-text">Premium Plan</p>
+</div>
+<button onclick="logout()" class="text-xs uppercase tracking-widest text-trs-red border border-trs-red px-3 py-1.5 rounded hover:bg-white hover:text-black transition">Logout</button>
+</div>
 
-            <!-- Error -->
-            <div id="auth-error" class="hidden bg-red-900/20 border border-red-500/50 text-red-200 text-xs p-4 mb-4 rounded-lg"></div>
+<!-- Credits -->
+<div class="card mb-10">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-display uppercase tracking-widest text-white text-sm">Generation Credits</h3>
+<span class="badge" id="usage-txt">0 / 50</span>
+</div>
+<div class="usage-bar"><div class="usage-fill" id="usage-bar" style="width:0%"></div></div>
+<p class="text-gray-600 text-xs mt-3">Each generation uses 1 credit.</p>
+</div>
 
-            <!-- Login Form -->
-            <div id="form-login" class="space-y-5">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Email</label>
-                    <input type="email" id="login-email" class="auth-input" placeholder="your@email.com">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Password</label>
-                    <input type="password" id="login-password" class="auth-input" placeholder="••••••••">
-                </div>
-                <button type="button" onclick="handleLogin()" class="auth-btn">Sign In</button>
-            </div>
+<!-- Tool Selector -->
+<h3 class="text-xl font-display font-bold uppercase tracking-widest text-white mb-6">Studio Tools</h3>
+<div class="flex flex-wrap gap-3 mb-8">
+<button onclick="openTool('text-to-music')" class="text-xs uppercase tracking-widest px-4 py-2 rounded-full border transition tool-tab" style="background:#cc0000;color:#fff;border-color:#cc0000">Text to Music</button>
+<button onclick="openTool('stem-separate')" class="text-xs uppercase tracking-widest px-4 py-2 rounded-full border border-white/20 text-gray-400 hover:text-white transition tool-tab">Stem Separate</button>
+<button onclick="openTool('revamp')" class="text-xs uppercase tracking-widest px-4 py-2 rounded-full border border-white/20 text-gray-400 hover:text-white transition tool-tab">AI Revamp</button>
+<button onclick="openTool('beat-variations')" class="text-xs uppercase tracking-widest px-4 py-2 rounded-full border border-white/20 text-gray-400 hover:text-white transition tool-tab">Beat Variations</button>
+</div>
 
-            <!-- Register Form -->
-            <div id="form-register" class="hidden space-y-5">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Name</label>
-                    <input type="text" id="reg-name" class="auth-input" placeholder="Your name">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Email</label>
-                    <input type="email" id="reg-email" class="auth-input" placeholder="your@email.com">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Password</label>
-                    <input type="password" id="reg-password" class="auth-input" placeholder="Min 6 characters">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">Invite Code</label>
-                    <input type="text" id="reg-invite" class="auth-input uppercase" placeholder="BEACH-XXX-XXXX">
-                </div>
-                <button type="button" onclick="handleRegister()" class="auth-btn">Create Account</button>
-            </div>
+<!-- ===== TOOL: TEXT TO MUSIC ===== -->
+<div id="tool-text-to-music" class="tool-section active card">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 bg-trs-red/20 rounded-lg flex items-center justify-center"><i data-lucide="wand-2" class="w-5 h-5 text-trs-red"></i></div>
+<h4 class="font-display uppercase tracking-widest text-white">Text to Music</h4>
+</div>
+<p class="text-gray-500 text-xs mb-4">Describe a vibe and generate original music with AI.</p>
+<textarea id="ttm-prompt" class="auth-input mb-3" rows="3" placeholder="e.g. Lo-fi hip hop with warm vinyl crackle, relaxed drums, mellow keys, chill vibe..."></textarea>
+<div class="flex gap-3 mb-4">
+<select id="ttm-duration" class="auth-input w-1/2">
+<option value="8">8 seconds</option>
+<option value="15" selected>15 seconds</option>
+<option value="30">30 seconds</option>
+</select>
+</div>
+<button onclick="generateMusic()" id="ttm-btn" class="gen-btn">✨ Generate Music</button>
+<div id="ttm-status" class="gen-status"><div class="spinner" style="width:16px;height:16px"></div><span id="ttm-status-txt">Generating...</span></div>
+<div id="ttm-result" class="gen-result">
+<p class="text-xs text-gray-400 mb-2">Generated Track:</p>
+<audio id="ttm-audio" controls class="w-full" style="border-radius:8px"></audio>
+</div>
+</div>
 
-            <!-- Loading -->
-            <div id="auth-loading" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-                <div class="text-center"><div class="spinner mb-4"></div><p class="text-trs-red text-xs font-display uppercase tracking-widest">Please wait...</p></div>
-            </div>
-        </div>
-    </div>
+<!-- ===== TOOL: STEM SEPARATE ===== -->
+<div id="tool-stem-separate" class="tool-section hidden card">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 bg-trs-red/20 rounded-lg flex items-center justify-center"><i data-lucide="mic-2" class="w-5 h-5 text-trs-red"></i></div>
+<h4 class="font-display uppercase tracking-widest text-white">Stem Separation</h4>
+</div>
+<p class="text-gray-500 text-xs mb-4">Upload a track and extract vocals, drums, bass, and other instruments.</p>
+<div id="ss-drop" class="border-2 border-dashed border-white/10 rounded-xl p-10 text-center cursor-pointer hover:border-trs-red transition mb-4" onclick="document.getElementById('ss-file').click()">
+<i data-lucide="upload" class="w-8 h-8 text-gray-500 mx-auto mb-3"></i>
+<p class="text-xs text-gray-400">Drop audio file or click to browse</p>
+<p class="text-xs text-gray-600 mt-1">Supports MP3, WAV, FLAC (up to 100MB)</p>
+</div>
+<input type="file" id="ss-file" accept="audio/*" class="hidden" onchange="ssFileSelected(event)">
+<div id="ss-file-info" class="hidden text-xs text-gray-400 mb-4 bg-[#111] p-3 rounded-lg"></div>
+<button onclick="stemSeparate()" id="ss-btn" class="gen-btn">🎧 Separate Stems</button>
+<div id="ss-status" class="gen-status"><div class="spinner" style="width:16px;height:16px"></div><span id="ss-status-txt">Processing...</span></div>
+<div id="ss-result" class="gen-result">
+<p class="text-xs text-gray-400 mb-2">Stems:</p>
+<div id="ss-stems" class="space-y-2"></div>
+</div>
+</div>
 
-    <!-- ===================== VIEW: DASHBOARD ===================== -->
-    <div id="view-dashboard" class="view-section hidden min-h-screen bg-black pt-24 pb-12">
-        <div class="max-w-6xl mx-auto px-6">
-            <!-- Header -->
-            <div class="flex justify-between items-center mb-10">
-                <div>
-                    <h2 class="text-3xl font-display font-bold uppercase tracking-widest text-white">
-                        Welcome, <span id="welcome-name" class="text-trs-red">VIP</span>
-                    </h2>
-                    <p class="text-gray-500 text-sm mt-1" id="plan-badge">Premium Plan</p>
-                </div>
-                <button type="button" onclick="handleLogout()" class="text-xs uppercase tracking-widest text-trs-red border border-trs-red px-3 py-1.5 rounded hover:bg-white hover:text-black transition cursor-pointer">Logout</button>
-            </div>
+<!-- ===== TOOL: AI REVAMP ===== -->
+<div id="tool-revamp" class="tool-section hidden card">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 bg-trs-red/20 rounded-lg flex items-center justify-center"><i data-lucide="audio-lines" class="w-5 h-5 text-trs-red"></i></div>
+<h4 class="font-display uppercase tracking-widest text-white">AI Revamp</h4>
+</div>
+<p class="text-gray-500 text-xs mb-4">Upload a track and apply AI style presets.</p>
+<div id="rv-drop" class="border-2 border-dashed border-white/10 rounded-xl p-8 text-center cursor-pointer hover:border-trs-red transition mb-4" onclick="document.getElementById('rv-file').click()">
+<i data-lucide="upload" class="w-8 h-8 text-gray-500 mx-auto mb-3"></i>
+<p class="text-xs text-gray-400">Upload track to revamp</p>
+</div>
+<input type="file" id="rv-file" accept="audio/*" class="hidden" onchange="rvFileSelected(event)">
+<div id="rv-file-info" class="hidden text-xs text-gray-400 mb-4 bg-[#111] p-3 rounded-lg"></div>
+<select id="rv-style" class="auth-input mb-4">
+<option value="modern-radio">Modern Radio</option>
+<option value="lo-fi">Lo-Fi / Chill</option>
+<option value="warm-vinyl">Warm Vinyl</option>
+<option value="underground-rap">Underground Rap</option>
+<option value="acoustic-session">Acoustic Session</option>
+<option value="electronic-club">Electronic Club</option>
+</select>
+<button onclick="revampTrack()" id="rv-btn" class="gen-btn">🎛️ Revamp Track</button>
+<div id="rv-status" class="gen-status"><div class="spinner" style="width:16px;height:16px"></div><span id="rv-status-txt">Revamping...</span></div>
+<div id="rv-result" class="gen-result">
+<p class="text-xs text-gray-400 mb-2">Revamped Track (<span id="rv-style-name">Modern Radio</span>):</p>
+<audio id="rv-audio" controls class="w-full" style="border-radius:8px"></audio>
+</div>
+</div>
 
-            <!-- Usage -->
-            <div class="premium-card mb-10">
-                <div class="flex justify-between items-center mb-4">
-                    <div><h3 class="font-display uppercase tracking-widest text-white text-sm">Generation Credits</h3></div>
-                    <span class="badge" id="usage-text">0 / 50</span>
-                </div>
-                <div class="usage-bar"><div class="usage-bar-fill" id="usage-bar" style="width:0%"></div></div>
-                <p class="text-gray-600 text-xs mt-3">Each generation uses 1 credit. Contact Beachside to top up.</p>
-            </div>
+<!-- ===== TOOL: BEAT VARIATIONS ===== -->
+<div id="tool-beat-variations" class="tool-section hidden card">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 bg-trs-red/20 rounded-lg flex items-center justify-center"><i data-lucide="music" class="w-5 h-5 text-trs-red"></i></div>
+<h4 class="font-display uppercase tracking-widest text-white">Beat Variations</h4>
+</div>
+<p class="text-gray-500 text-xs mb-4">Upload a beat and generate AI variations in different moods.</p>
+<div id="bv-drop" class="border-2 border-dashed border-white/10 rounded-xl p-8 text-center cursor-pointer hover:border-trs-red transition mb-4" onclick="document.getElementById('bv-file').click()">
+<i data-lucide="upload" class="w-8 h-8 text-gray-500 mx-auto mb-3"></i>
+<p class="text-xs text-gray-400">Upload beat to vary</p>
+</div>
+<input type="file" id="bv-file" accept="audio/*" class="hidden" onchange="bvFileSelected(event)">
+<div id="bv-file-info" class="hidden text-xs text-gray-400 mb-4 bg-[#111] p-3 rounded-lg"></div>
+<select id="bv-mood" class="auth-input mb-4">
+<option value="upbeat">Upbeat / Energetic</option>
+<option value="chill">Chill / Laid Back</option>
+<option value="dark">Dark / Moody</option>
+<option value="melodic">Melodic / Emotional</option>
+<option value="aggressive">Aggressive / Hard</option>
+</select>
+<button onclick="beatVariations()" id="bv-btn" class="gen-btn">🎵 Generate Variation</button>
+<div id="bv-status" class="gen-status"><div class="spinner" style="width:16px;height:16px"></div><span id="bv-status-txt">Generating variation...</span></div>
+<div id="bv-result" class="gen-result">
+<p class="text-xs text-gray-400 mb-2">Beat Variation:</p>
+<audio id="bv-audio" controls class="w-full" style="border-radius:8px"></audio>
+</div>
+</div>
 
-            <!-- Tools -->
-            <h3 class="text-xl font-display font-bold uppercase tracking-widest text-white mb-6">Studio Tools</h3>
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- Stem Separation -->
-                <div class="tool-card">
-                    <div class="flex items-start gap-4 mb-4">
-                        <div class="w-12 h-12 bg-trs-red/20 rounded-lg flex items-center justify-center shrink-0"><i data-lucide="mic-2" class="w-6 h-6 text-trs-red"></i></div>
-                        <div><h4 class="font-display uppercase tracking-widest text-white text-sm mb-1">Stem Separation</h4><p class="text-gray-500 text-xs">Extract vocals, drums, bass, and other instruments from any track.</p></div>
-                    </div>
-                    <div class="coming-soon rounded-xl"><div class="text-center"><i data-lucide="lock" class="w-8 h-8 text-trs-red mx-auto mb-2"></i><p class="text-xs font-display uppercase tracking-widest text-white">Coming Soon</p></div></div>
-                </div>
+</div>
+</div>
 
-                <!-- Text to Music -->
-                <div class="tool-card">
-                    <div class="flex items-start gap-4 mb-4">
-                        <div class="w-12 h-12 bg-trs-red/20 rounded-lg flex items-center justify-center shrink-0"><i data-lucide="wand-2" class="w-6 h-6 text-trs-red"></i></div>
-                        <div><h4 class="font-display uppercase tracking-widest text-white text-sm mb-1">Text to Music</h4><p class="text-gray-500 text-xs">Describe a vibe and generate original music with AI.</p></div>
-                    </div>
-                    <div class="coming-soon rounded-xl"><div class="text-center"><i data-lucide="lock" class="w-8 h-8 text-trs-red mx-auto mb-2"></i><p class="text-xs font-display uppercase tracking-widest text-white">Coming Soon</p></div></div>
-                </div>
+<!-- Footer -->
+<footer class="bg-[#0a0a0a] py-8 px-6 border-t border-white/5 text-center">
+<p class="text-gray-600 text-xs uppercase tracking-widest">Beachside Studios Premium Portal</p>
+<a href="https://beachside-website.vercel.app" class="text-gray-500 text-xs hover:text-trs-red transition mt-2 inline-block">← Back to Beachside Studios</a>
+</footer>
 
-                <!-- AI Revamp -->
-                <div class="tool-card">
-                    <div class="flex items-start gap-4 mb-4">
-                        <div class="w-12 h-12 bg-trs-red/20 rounded-lg flex items-center justify-center shrink-0"><i data-lucide="audio-lines" class="w-6 h-6 text-trs-red"></i></div>
-                        <div><h4 class="font-display uppercase tracking-widest text-white text-sm mb-1">AI Revamp</h4><p class="text-gray-500 text-xs">Upload a track and apply style presets — warm vinyl, modern radio, lo-fi, and more.</p></div>
-                    </div>
-                    <div class="coming-soon rounded-xl"><div class="text-center"><i data-lucide="lock" class="w-8 h-8 text-trs-red mx-auto mb-2"></i><p class="text-xs font-display uppercase tracking-widest text-white">Coming Soon</p></div></div>
-                </div>
+<script>
+const API = 'https://api.beachsiderecordingstudio.us/api/premium';
+let user = null;
 
-                <!-- Beat Generator -->
-                <div class="tool-card">
-                    <div class="flex items-start gap-4 mb-4">
-                        <div class="w-12 h-12 bg-trs-red/20 rounded-lg flex items-center justify-center shrink-0"><i data-lucide="music" class="w-6 h-6 text-trs-red"></i></div>
-                        <div><h4 class="font-display uppercase tracking-widest text-white text-sm mb-1">Beat Variations</h4><p class="text-gray-500 text-xs">Upload a beat and generate AI-powered variations in different styles.</p></div>
-                    </div>
-                    <div class="coming-soon rounded-xl"><div class="text-center"><i data-lucide="lock" class="w-8 h-8 text-trs-red mx-auto mb-2"></i><p class="text-xs font-display uppercase tracking-widest text-white">Coming Soon</p></div></div>
-                </div>
-            </div>
-        </div>
-    </div>
+// Init
+window.addEventListener('load',()=>document.getElementById('preloader').classList.add('hidden'));
+setTimeout(()=>document.getElementById('preloader').classList.add('hidden'),5000);
+document.addEventListener('DOMContentLoaded',()=>{lucide.createIcons();checkSession()});
 
-    <!-- Footer -->
-    <footer class="bg-[#0a0a0a] py-8 px-6 border-t border-white/5 text-center mt-auto">
-        <p class="text-gray-600 text-xs uppercase tracking-widest">Beachside Studios Premium Portal</p>
-        <a href="https://beachside-website.vercel.app" class="text-gray-500 text-xs hover:text-trs-red transition mt-2 inline-block">← Back to Beachside Studios</a>
-    </footer>
+// Navigation
+function showView(id){
+document.querySelectorAll('.view').forEach(v=>{v.classList.remove('active');v.classList.add('hidden')});
+const el=document.getElementById('view-'+id);
+if(el){el.classList.remove('hidden');el.classList.add('active')}
+window.scrollTo(0,0);setTimeout(()=>lucide.createIcons(),50)
+}
 
-    <script>
-        // ==========================================
-        // CONFIG
-        // ==========================================
-        const PREMIUM_API = 'https://api.beachsiderecordingstudio.us/api/premium';
+function switchTab(t){
+document.getElementById('form-login').classList.toggle('hidden',t!=='login');
+document.getElementById('form-reg').classList.toggle('hidden',t!=='register');
+if(t==='login'){document.getElementById('ltab').className='pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition';document.getElementById('rtab').className='pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition'}
+else{document.getElementById('ltab').className='pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition';document.getElementById('rtab').className='pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition'}
+}
 
-        // ==========================================
-        // INIT
-        // ==========================================
-        window.addEventListener('load', () => document.getElementById('preloader').classList.add('hidden'));
-        setTimeout(() => document.getElementById('preloader').classList.add('hidden'), 5000);
-        document.addEventListener('DOMContentLoaded', () => { 
-            lucide.createIcons(); 
-            checkSession(); 
-        });
+// Tool tabs
+function openTool(tool){
+document.querySelectorAll('.tool-section').forEach(s=>s.classList.remove('active'));
+document.querySelectorAll('.tool-tab').forEach(b=>{b.style.background='transparent';b.style.color='';b.style.borderColor='rgba(255,255,255,0.2)'});
+const el=document.getElementById('tool-'+tool);
+if(el){el.classList.add('active');el.classList.remove('hidden')}
+const btn=event.currentTarget||document.querySelector(`[onclick*="${tool}"]`);
+if(btn){btn.style.background='#cc0000';btn.style.color='#fff';btn.style.borderColor='#cc0000'}
+setTimeout(()=>lucide.createIcons(),50)
+}
 
-        // ==========================================
-        // NAVIGATION
-        // ==========================================
-        function navigateTo(viewId) {
-            document.querySelectorAll('.view-section').forEach(x => {
-                x.classList.remove('active');
-                x.classList.add('hidden');
-            });
-            const target = document.getElementById(viewId);
-            if (target) {
-                target.classList.remove('hidden');
-                target.classList.add('active');
-            }
-            window.scrollTo(0, 0);
-            lucide.createIcons();
-        }
+// Auth
+function authErr(m){const e=document.getElementById('auth-err');e.textContent=m;e.classList.remove('hidden');setTimeout(()=>e.classList.add('hidden'),5000)}
+function authLoad(s){document.getElementById('auth-load').classList.toggle('hidden',!s)}
 
-        // ==========================================
-        // AUTH
-        // ==========================================
-        let currentUser = null;
+async function login(){
+const email=document.getElementById('lemail').value.trim(),pass=document.getElementById('lpass').value;
+if(!email||!pass){authErr('Fill in all fields');return}
+authLoad(true);
+try{
+const r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({email,password})});
+const d=await r.json();authLoad(false);
+if(!r.ok){authErr(d.error||'Login failed');return}
+user=d.user;updateUI();showView('dashboard')
+}catch(e){authLoad(false);authErr('Connection error')}
+}
 
-        function showAuthError(msg) {
-            const err = document.getElementById('auth-error');
-            err.textContent = msg;
-            err.classList.remove('hidden');
-            setTimeout(() => err.classList.add('hidden'), 5000);
-        }
+async function register(){
+const n=document.getElementById('rname').value.trim(),e=document.getElementById('remail').value.trim(),p=document.getElementById('rpass').value,iv=document.getElementById('rinvite').value.trim().toUpperCase();
+if(!n||!e||!p||!iv){authErr('Fill in all fields');return}
+if(p.length<6){authErr('Password must be 6+ characters');return}
+authLoad(true);
+try{
+const r=await fetch(API+'/register',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({name:n,email:e,password:p,inviteCode:iv})});
+const d=await r.json();authLoad(false);
+if(!r.ok){authErr(d.error||'Registration failed');return}
+user=d.user;updateUI();showView('dashboard')
+}catch(e){authLoad(false);authErr('Connection error')}
+}
 
-        function showAuthLoading(show) {
-            document.getElementById('auth-loading').classList.toggle('hidden', !show);
-        }
+async function logout(){
+try{await fetch(API+'/logout',{method:'POST',credentials:'include'})}catch(e){}
+user=null;updateUI();showView('login')
+}
 
-        function switchAuthTab(tab) {
-            const login = document.getElementById('form-login');
-            const register = document.getElementById('form-register');
-            const loginBtn = document.getElementById('tab-login-btn');
-            const registerBtn = document.getElementById('tab-register-btn');
+async function checkSession(){
+try{
+const r=await fetch(API+'/me',{credentials:'include'});
+const d=await r.json();
+if(d.authenticated&&d.user){user=d.user;updateUI();showView('dashboard')}
+}catch(e){}
+}
 
-            if (tab === 'login') {
-                login.classList.remove('hidden');
-                register.classList.add('hidden');
-                loginBtn.className = 'pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition cursor-pointer';
-                registerBtn.className = 'pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition cursor-pointer';
-            } else {
-                login.classList.add('hidden');
-                register.classList.remove('hidden');
-                loginBtn.className = 'pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition cursor-pointer';
-                registerBtn.className = 'pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition cursor-pointer';
-            }
-        }
+function updateUI(){
+const si=document.getElementById('nav-signin'),lo=document.getElementById('nav-logout'),da=document.getElementById('nav-dash'),st=document.getElementById('nav-status');
+if(user){
+si.classList.add('hidden');lo.classList.remove('hidden');da.classList.remove('hidden');
+st.textContent=user.name||user.email;st.classList.remove('hidden');
+document.getElementById('welcome').textContent=user.name||user.email;
+document.getElementById('plan-text').textContent=(user.plan||'Premium').toUpperCase()+' Plan';
+const u=user.generationsUsed||0,m=user.maxGenerations||50;
+document.getElementById('usage-txt').textContent=u+' / '+m;
+document.getElementById('usage-bar').style.width=Math.min(100,(u/m)*100)+'%'
+}else{
+si.classList.remove('hidden');lo.classList.add('hidden');da.classList.add('hidden');st.classList.add('hidden')
+}
+}
 
-        async function handleLogin() {
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-            if (!email || !password) { showAuthError('Please fill in all fields'); return; }
+// Status helpers
+function showStatus(id,msg){const el=document.getElementById(id+'-status');el.classList.add('active');document.getElementById(id+'-status-txt').textContent=msg}
+function hideStatus(id){document.getElementById(id+'-status').classList.remove('active')}
+function showResult(id){document.getElementById(id+'-result').classList.add('active')}
+function hideResult(id){document.getElementById(id+'-result').classList.remove('active')}
 
-            showAuthLoading(true);
-            try {
-                const res = await fetch(PREMIUM_API + '/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await res.json();
-                showAuthLoading(false);
-                if (!res.ok) { showAuthError(data.error || 'Login failed'); return; }
-                currentUser = data.user;
-                updateUI();
-                navigateTo('view-dashboard');
-            } catch(e) {
-                showAuthLoading(false);
-                showAuthError('Connection error. Try again.');
-            }
-        }
+// ====== TEXT TO MUSIC ======
+async function generateMusic(){
+const prompt=document.getElementById('ttm-prompt').value.trim();
+if(!prompt){alert('Enter a prompt first');return}
+const dur=document.getElementById('ttm-duration').value;
+document.getElementById('ttm-btn').disabled=true;
+hideResult('ttm');showStatus('ttm','Generating music with AI...');
+try{
+const r=await fetch(API+'/text-to-music',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({prompt,duration:parseInt(dur)})});
+const d=await r.json();
+hideStatus('ttm');
+if(!r.ok){alert('Error: '+(d.error||'Generation failed'));document.getElementById('ttm-btn').disabled=false;return}
+const audio=document.getElementById('ttm-audio');
+audio.src=d.audioUrl;audio.play();
+showResult('ttm');
+const used=d.generationsUsed||user.generationsUsed||0,max=d.maxGenerations||user.maxGenerations||50;
+if(user){user.generationsUsed=used;user.maxGenerations=max;updateUI()}
+}catch(e){hideStatus('ttm');alert('Generation failed. Try again.')}
+document.getElementById('ttm-btn').disabled=false
+}
 
-        async function handleRegister() {
-            const name = document.getElementById('reg-name').value.trim();
-            const email = document.getElementById('reg-email').value.trim();
-            const password = document.getElementById('reg-password').value;
-            const inviteCode = document.getElementById('reg-invite').value.trim().toUpperCase();
+// ====== STEM SEPARATION ======
+function ssFileSelected(e){const f=e.target.files[0];if(!f)return;document.getElementById('ss-file-info').classList.remove('hidden');document.getElementById('ss-file-info').textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}
 
-            if (!name || !email || !password || !inviteCode) { showAuthError('Fill in all fields'); return; }
-            if (password.length < 6) { showAuthError('Password must be 6+ characters'); return; }
+async function stemSeparate(){
+const file=document.getElementById('ss-file').files[0];
+if(!file){alert('Upload an audio file first');return}
+document.getElementById('ss-btn').disabled=true;
+hideResult('ss');showStatus('ss','Separating stems...');
+const fd=new FormData();fd.append('audio',file);
+try{
+const r=await fetch(API+'/stem-separate',{method:'POST',credentials:'include',body:fd});
+const d=await r.json();
+hideStatus('ss');
+if(!r.ok){alert('Error: '+(d.error||'Separation failed'));document.getElementById('ss-btn').disabled=false;return}
+const container=document.getElementById('ss-stems');container.innerHTML='';
+if(d.stems){
+Object.entries(d.stems).forEach(([name,url])=>{
+container.innerHTML+='<div class="flex items-center justify-between bg-[#111] p-2 rounded-lg"><span class="text-xs text-white uppercase tracking-widest">'+name+'</span><audio src="'+url+'" controls style="height:32px;border-radius:4px;width:140px"></audio></div>'
+})
+}
+showResult('ss');
+if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
+}catch(e){hideStatus('ss');alert('Separation failed. Try again.')}
+document.getElementById('ss-btn').disabled=false
+}
 
-            showAuthLoading(true);
-            try {
-                const res = await fetch(PREMIUM_API + '/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ name, email, password, inviteCode })
-                });
-                const data = await res.json();
-                showAuthLoading(false);
-                if (!res.ok) { showAuthError(data.error || 'Registration failed'); return; }
-                currentUser = data.user;
-                updateUI();
-                navigateTo('view-dashboard');
-            } catch(e) {
-                showAuthLoading(false);
-                showAuthError('Connection error. Try again.');
-            }
-        }
+// ====== AI REVAMP ======
+function rvFileSelected(e){const f=e.target.files[0];if(!f)return;document.getElementById('rv-file-info').classList.remove('hidden');document.getElementById('rv-file-info').textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}
 
-        async function handleLogout() {
-            try {
-                await fetch(PREMIUM_API + '/logout', { method: 'POST', credentials: 'include' });
-            } catch(e) {}
-            currentUser = null;
-            updateUI();
-            navigateTo('view-login');
-        }
+async function revampTrack(){
+const file=document.getElementById('rv-file').files[0];
+if(!file){alert('Upload an audio file first');return}
+const style=document.getElementById('rv-style').value;
+const styleNames={'modern-radio':'Modern Radio','lo-fi':'Lo-Fi / Chill','warm-vinyl':'Warm Vinyl','underground-rap':'Underground Rap','acoustic-session':'Acoustic Session','electronic-club':'Electronic Club'};
+document.getElementById('rv-btn').disabled=true;
+hideResult('rv');showStatus('rv','Revamping track...');
+const fd=new FormData();fd.append('audio',file);fd.append('style',style);
+try{
+const r=await fetch(API+'/revamp',{method:'POST',credentials:'include',body:fd});
+const d=await r.json();
+hideStatus('rv');
+if(!r.ok){alert('Error: '+(d.error||'Revamp failed'));document.getElementById('rv-btn').disabled=false;return}
+const audio=document.getElementById('rv-audio');
+audio.src=d.audioUrl;audio.play();
+document.getElementById('rv-style-name').textContent=styleNames[style]||style;
+showResult('rv');
+if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
+}catch(e){hideStatus('rv');alert('Revamp failed. Try again.')}
+document.getElementById('rv-btn').disabled=false
+}
 
-        async function checkSession() {
-            try {
-                const res = await fetch(PREMIUM_API + '/me', { credentials: 'include' });
-                const data = await res.json();
-                if (data.authenticated && data.user) {
-                    currentUser = data.user;
-                    updateUI();
-                    navigateTo('view-dashboard');
-                }
-            } catch(e) {}
-        }
+// ====== BEAT VARIATIONS ======
+function bvFileSelected(e){const f=e.target.files[0];if(!f)return;document.getElementById('bv-file-info').classList.remove('hidden');document.getElementById('bv-file-info').textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}
 
-        function updateUI() {
-            const loginBtn = document.getElementById('nav-auth-btn');
-            const logoutBtn = document.getElementById('nav-logout-btn');
-            const dashBtn = document.getElementById('nav-dashboard-btn');
-            const status = document.getElementById('nav-user-status');
+async function beatVariations(){
+const file=document.getElementById('bv-file').files[0];
+if(!file){alert('Upload a beat file first');return}
+const mood=document.getElementById('bv-mood').value;
+document.getElementById('bv-btn').disabled=true;
+hideResult('bv');showStatus('bv','Generating beat variation...');
+const fd=new FormData();fd.append('audio',file);fd.append('mood',mood);
+try{
+const r=await fetch(API+'/beat-variations',{method:'POST',credentials:'include',body:fd});
+const d=await r.json();
+hideStatus('bv');
+if(!r.ok){alert('Error: '+(d.error||'Generation failed'));document.getElementById('bv-btn').disabled=false;return}
+const audio=document.getElementById('bv-audio');
+audio.src=d.audioUrl;audio.play();
+showResult('bv');
+if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
+}catch(e){hideStatus('bv');alert('Beat variation failed. Try again.')}
+document.getElementById('bv-btn').disabled=false
+}
 
-            if (currentUser) {
-                loginBtn.classList.add('hidden');
-                logoutBtn.classList.remove('hidden');
-                dashBtn.classList.remove('hidden');
-                status.textContent = currentUser.name || currentUser.email;
-                status.classList.remove('hidden');
-
-                // Dashboard info
-                document.getElementById('welcome-name').textContent = currentUser.name || currentUser.email;
-                document.getElementById('plan-badge').textContent = (currentUser.plan || 'Premium').toUpperCase() + ' Plan';
-                const used = currentUser.generationsUsed || 0;
-                const max = currentUser.maxGenerations || 50;
-                document.getElementById('usage-text').textContent = used + ' / ' + max;
-                document.getElementById('usage-bar').style.width = Math.min(100, (used / max) * 100) + '%';
-            } else {
-                loginBtn.classList.remove('hidden');
-                logoutBtn.classList.add('hidden');
-                dashBtn.classList.add('hidden');
-                status.classList.add('hidden');
-            }
-        }
-    </script>
+// Init: open first tool
+setTimeout(()=>openTool('text-to-music'),100);
+</script>
 </body>
 </html>
