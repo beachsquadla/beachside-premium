@@ -103,11 +103,6 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 <p class="text-gray-500 text-xs mb-4">Describe a vibe and add optional lyrics. AI generates a complete song with vocals.</p>
 <textarea id="ttm-prompt" class="auth-input mb-3" rows="2" placeholder="e.g. Lo-fi hip hop with warm vinyl crackle, relaxed drums, mellow keys, chill vibe..."></textarea>
 <textarea id="ttm-lyrics" class="auth-input mb-3" rows="3" placeholder="Optional lyrics — use [Verse], [Chorus], [Bridge] tags. Leave blank for AI to generate...">[Verse]
-Feel the vibe, let it flow
-In the moonlight, we take it slow
-[Chorus]
-This is the sound of Beachside
-Let it play, feel the pride</textarea>
 <div class="flex gap-3 mb-4">
 <select id="ttm-duration" class="auth-input w-1/2">
 <option value="8">8 seconds</option>
@@ -117,6 +112,7 @@ Let it play, feel the pride</textarea>
 </div>
 <button onclick="generateMusic()" id="ttm-btn" class="gen-btn">✨ Generate Music ($0.03)</button>
 <div id="ttm-status" class="gen-status"><div class="spinner" style="width:16px;height:16px"></div><span id="ttm-status-txt">Generating...</span></div>
+<div id="ttm-err" class="hidden text-red-400 text-xs mt-2 bg-red-900/20 p-3 rounded-lg"></div>
 <div id="ttm-result" class="gen-result">
 <p class="text-xs text-gray-400 mb-2">Generated Track:</p>
 <audio id="ttm-audio" controls class="w-full" style="border-radius:8px"></audio>
@@ -139,6 +135,7 @@ Let it play, feel the pride</textarea>
 <div id="ss-file-info" class="hidden text-xs text-gray-400 mb-4 bg-[#111] p-3 rounded-lg"></div>
 <button onclick="stemSeparate()" id="ss-btn" class="gen-btn">🎧 Separate Stems</button>
 <div id="ss-status" class="gen-status"><div class="spinner" style="width:16px;height:16px"></div><span id="ss-status-txt">Processing...</span></div>
+<div id="ss-err" class="hidden text-red-400 text-xs mt-2 bg-red-900/20 p-3 rounded-lg"></div>
 <div id="ss-result" class="gen-result">
 <p class="text-xs text-gray-400 mb-2">Stems:</p>
 <div id="ss-stems" class="space-y-2"></div>
@@ -168,6 +165,7 @@ Let it play, feel the pride</textarea>
 </select>
 <button onclick="revampTrack()" id="rv-btn" class="gen-btn">🎛️ Revamp Track</button>
 <div id="rv-status" class="gen-status"><div class="spinner" style="width:16px;height:16px"></div><span id="rv-status-txt">Revamping...</span></div>
+<div id="rv-err" class="hidden text-red-400 text-xs mt-2 bg-red-900/20 p-3 rounded-lg"></div>
 <div id="rv-result" class="gen-result">
 <p class="text-xs text-gray-400 mb-2">Revamped Track (<span id="rv-style-name">Modern Radio</span>):</p>
 <audio id="rv-audio" controls class="w-full" style="border-radius:8px"></audio>
@@ -196,6 +194,7 @@ Let it play, feel the pride</textarea>
 </select>
 <button onclick="beatVariations()" id="bv-btn" class="gen-btn">🎵 Generate Variation</button>
 <div id="bv-status" class="gen-status"><div class="spinner" style="width:16px;height:16px"></div><span id="bv-status-txt">Generating variation...</span></div>
+<div id="bv-err" class="hidden text-red-400 text-xs mt-2 bg-red-900/20 p-3 rounded-lg"></div>
 <div id="bv-result" class="gen-result">
 <p class="text-xs text-gray-400 mb-2">Beat Variation:</p>
 <audio id="bv-audio" controls class="w-full" style="border-radius:8px"></audio>
@@ -331,13 +330,15 @@ function updateUI(){
 
 function showStatus(id,msg){var el=document.getElementById(id+'-status');if(el){el.classList.add('active');var t=document.getElementById(id+'-status-txt');if(t)t.textContent=msg}}
 function hideStatus(id){var el=document.getElementById(id+'-status');if(el)el.classList.remove('active')}
+function showToolErr(id,msg){var el=document.getElementById(id+'-err');if(el){el.textContent=msg;el.classList.remove('hidden')};setTimeout(function(){if(el)el.classList.add('hidden')},8000)}
+function hideToolErr(id){var el=document.getElementById(id+'-err');if(el)el.classList.add('hidden')}
 function showResult(id){var el=document.getElementById(id+'-result');if(el)el.classList.add('active')}
 function hideResult(id){var el=document.getElementById(id+'-result');if(el)el.classList.remove('active')}
 
 // Text to Music
 async function generateMusic(){
   var prompt=document.getElementById('ttm-prompt');if(!prompt)return;
-  var txt=prompt.value.trim();if(!txt){alert('Enter a prompt first');return}
+  var txt=prompt.value.trim();if(!txt){showToolErr('ttm','Enter a prompt first');if(btn)btn.disabled=false;return}
   var lyrics=document.getElementById('ttm-lyrics');
   var lyr=lyrics?lyrics.value.trim():'';
   var dur=document.getElementById('ttm-duration');var d=dur?parseInt(dur.value):15;
@@ -348,34 +349,34 @@ async function generateMusic(){
     if(lyr)body.lyrics_prompt=lyr;
     var r=await fetch(API+'/text-to-music',{method:'POST',headers:{'Content-Type':'application/json','x-auth-token':getToken()},body:JSON.stringify(body)});
     var data=await r.json();hideStatus('ttm');
-    if(!r.ok){alert('Error: '+(data.error||'Generation failed'));if(btn)btn.disabled=false;return}
+    if(!r.ok){showToolErr('ttm',data.error||'Generation failed');if(btn)btn.disabled=false;return}
     var audio=document.getElementById('ttm-audio');
     if(audio){audio.src=data.audioUrl;audio.play()}
     showResult('ttm');
     if(user&&data.generationsUsed!==undefined){user.generationsUsed=data.generationsUsed;user.maxGenerations=data.maxGenerations;updateUI()}
-  }catch(e){hideStatus('ttm');alert('Generation failed. Try again.')}
+  }catch(e){hideStatus('ttm');showToolErr('ttm','Generation failed. '+e.message)}
   if(btn)btn.disabled=false
 }
 
 function ssFileSelected(e){var f=e.target.files[0];if(!f)return;var info=document.getElementById('ss-file-info');if(info){info.classList.remove('hidden');info.textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}}
 async function stemSeparate(){
-  var file=document.getElementById('ss-file');if(!file||!file.files[0]){alert('Upload an audio file first');return}
+  var file=document.getElementById('ss-file');if(!file||!file.files[0]){showToolErr('ss','Upload an audio file first');return}
   var f=file.files[0];var btn=document.getElementById('ss-btn');if(btn)btn.disabled=true;
   hideResult('ss');showStatus('ss','Separating stems...');
   var fd=new FormData();fd.append('audio',f);
   try{
     var r=await fetch(API+'/stem-separate',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
     var d=await r.json();hideStatus('ss');
-    if(!r.ok){alert('Error: '+(d.error||'Separation failed'));if(btn)btn.disabled=false;return}
+    if(!r.ok){showToolErr('ss',d.error||'Separation failed');if(btn)btn.disabled=false;return}
     var c=document.getElementById('ss-stems');if(c){c.innerHTML='';if(d.stems){Object.keys(d.stems).forEach(function(k){c.innerHTML+='<div class=\"flex items-center justify-between bg-[#111] p-2 rounded-lg\"><span class=\"text-xs text-white uppercase tracking-widest\">'+k+'</span><audio src=\"'+d.stems[k]+'\" controls style=\"height:32px;border-radius:4px;width:140px\"></audio></div>'})}}
     showResult('ss');if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
-  }catch(e){hideStatus('ss');alert('Separation failed. Try again.')}
+  }catch(e){hideStatus('ss');showToolErr('ss','Separation failed. '+e.message)}
   if(btn)btn.disabled=false
 }
 
 function rvFileSelected(e){var f=e.target.files[0];if(!f)return;var info=document.getElementById('rv-file-info');if(info){info.classList.remove('hidden');info.textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}}
 async function revampTrack(){
-  var file=document.getElementById('rv-file');if(!file||!file.files[0]){alert('Upload an audio file first');return}
+  var file=document.getElementById('rv-file');if(!file||!file.files[0]){showToolErr('rv','Upload an audio file first');return}
   var f=file.files[0];var style=document.getElementById('rv-style');var s=style?style.value:'modern-radio';
   var styleNames={'modern-radio':'Modern Radio','lo-fi':'Lo-Fi / Chill','warm-vinyl':'Warm Vinyl','underground-rap':'Underground Rap','acoustic-session':'Acoustic Session','electronic-club':'Electronic Club'};
   var btn=document.getElementById('rv-btn');if(btn)btn.disabled=true;
@@ -384,17 +385,17 @@ async function revampTrack(){
   try{
     var r=await fetch(API+'/revamp',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
     var d=await r.json();hideStatus('rv');
-    if(!r.ok){alert('Error: '+(d.error||'Revamp failed'));if(btn)btn.disabled=false;return}
+    if(!r.ok){showToolErr('rv',d.error||'Revamp failed');if(btn)btn.disabled=false;return}
     var audio=document.getElementById('rv-audio');if(audio){audio.src=d.audioUrl;audio.play()}
     var sn=document.getElementById('rv-style-name');if(sn)sn.textContent=styleNames[s]||s;
     showResult('rv');if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
-  }catch(e){hideStatus('rv');alert('Revamp failed. Try again.')}
+  }catch(e){hideStatus('rv');showToolErr('rv','Revamp failed. '+e.message)}
   if(btn)btn.disabled=false
 }
 
 function bvFileSelected(e){var f=e.target.files[0];if(!f)return;var info=document.getElementById('bv-file-info');if(info){info.classList.remove('hidden');info.textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}}
 async function beatVariations(){
-  var file=document.getElementById('bv-file');if(!file||!file.files[0]){alert('Upload a beat file first');return}
+  var file=document.getElementById('bv-file');if(!file||!file.files[0]){showToolErr('bv','Upload a beat file first');return}
   var f=file.files[0];var mood=document.getElementById('bv-mood');var m=mood?mood.value:'upbeat';
   var btn=document.getElementById('bv-btn');if(btn)btn.disabled=true;
   hideResult('bv');showStatus('bv','Generating beat variation...');
@@ -402,10 +403,10 @@ async function beatVariations(){
   try{
     var r=await fetch(API+'/beat-variations',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
     var d=await r.json();hideStatus('bv');
-    if(!r.ok){alert('Error: '+(d.error||'Failed'));if(btn)btn.disabled=false;return}
+    if(!r.ok){showToolErr('bv',d.error||'Generation failed');if(btn)btn.disabled=false;return}
     var audio=document.getElementById('bv-audio');if(audio){audio.src=d.audioUrl;audio.play()}
     showResult('bv');if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
-  }catch(e){hideStatus('bv');alert('Beat variation failed. Try again.')}
+  }catch(e){hideStatus('bv');showToolErr('bv','Beat variation failed. '+e.message)}
   if(btn)btn.disabled=false
 }
 
