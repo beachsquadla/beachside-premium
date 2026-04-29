@@ -100,8 +100,14 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 <div class="w-10 h-10 bg-trs-red/20 rounded-lg flex items-center justify-center"><i data-lucide="wand-2" class="w-5 h-5 text-trs-red"></i></div>
 <h4 class="font-display uppercase tracking-widest text-white">Text to Music</h4>
 </div>
-<p class="text-gray-500 text-xs mb-4">Describe a vibe and generate original music with AI.</p>
-<textarea id="ttm-prompt" class="auth-input mb-3" rows="3" placeholder="e.g. Lo-fi hip hop with warm vinyl crackle, relaxed drums, mellow keys, chill vibe..."></textarea>
+<p class="text-gray-500 text-xs mb-4">Describe a vibe and add optional lyrics. AI generates a complete song with vocals.</p>
+<textarea id="ttm-prompt" class="auth-input mb-3" rows="2" placeholder="e.g. Lo-fi hip hop with warm vinyl crackle, relaxed drums, mellow keys, chill vibe..."></textarea>
+<textarea id="ttm-lyrics" class="auth-input mb-3" rows="3" placeholder="Optional lyrics — use [Verse], [Chorus], [Bridge] tags. Leave blank for AI to generate...">[Verse]
+Feel the vibe, let it flow
+In the moonlight, we take it slow
+[Chorus]
+This is the sound of Beachside
+Let it play, feel the pride</textarea>
 <div class="flex gap-3 mb-4">
 <select id="ttm-duration" class="auth-input w-1/2">
 <option value="8">8 seconds</option>
@@ -109,7 +115,7 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 <option value="30">30 seconds</option>
 </select>
 </div>
-<button onclick="generateMusic()" id="ttm-btn" class="gen-btn">✨ Generate Music</button>
+<button onclick="generateMusic()" id="ttm-btn" class="gen-btn">✨ Generate Music ($0.03)</button>
 <div id="ttm-status" class="gen-status"><div class="spinner" style="width:16px;height:16px"></div><span id="ttm-status-txt">Generating...</span></div>
 <div id="ttm-result" class="gen-result">
 <p class="text-xs text-gray-400 mb-2">Generated Track:</p>
@@ -332,11 +338,15 @@ function hideResult(id){var el=document.getElementById(id+'-result');if(el)el.cl
 async function generateMusic(){
   var prompt=document.getElementById('ttm-prompt');if(!prompt)return;
   var txt=prompt.value.trim();if(!txt){alert('Enter a prompt first');return}
+  var lyrics=document.getElementById('ttm-lyrics');
+  var lyr=lyrics?lyrics.value.trim():'';
   var dur=document.getElementById('ttm-duration');var d=dur?parseInt(dur.value):15;
   var btn=document.getElementById('ttm-btn');if(btn)btn.disabled=true;
   hideResult('ttm');showStatus('ttm','Generating music with AI...');
   try{
-    var r=await fetch(API+'/text-to-music',{method:'POST',headers:{'Content-Type':'application/json','x-auth-token':getToken()},body:JSON.stringify({prompt:txt,duration:d})});
+    var body={prompt:txt,duration:d};
+    if(lyr)body.lyrics_prompt=lyr;
+    var r=await fetch(API+'/text-to-music',{method:'POST',headers:{'Content-Type':'application/json','x-auth-token':getToken()},body:JSON.stringify(body)});
     var data=await r.json();hideStatus('ttm');
     if(!r.ok){alert('Error: '+(data.error||'Generation failed'));if(btn)btn.disabled=false;return}
     var audio=document.getElementById('ttm-audio');
