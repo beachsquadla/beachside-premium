@@ -148,13 +148,7 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 <div class="w-10 h-10 bg-trs-red/20 rounded-lg flex items-center justify-center"><i data-lucide="audio-lines" class="w-5 h-5 text-trs-red"></i></div>
 <h4 class="font-display uppercase tracking-widest text-white">AI Revamp</h4>
 </div>
-<p class="text-gray-500 text-xs mb-4">Upload a track and apply AI style presets.</p>
-<div id="rv-drop" class="border-2 border-dashed border-white/10 rounded-xl p-8 text-center cursor-pointer hover:border-trs-red transition mb-4" onclick="document.getElementById('rv-file').click()">
-<i data-lucide="upload" class="w-8 h-8 text-gray-500 mx-auto mb-3"></i>
-<p class="text-xs text-gray-400">Upload track to revamp</p>
-</div>
-<input type="file" id="rv-file" accept="audio/*" class="hidden" onchange="rvFileSelected(event)">
-<div id="rv-file-info" class="hidden text-xs text-gray-400 mb-4 bg-[#111] p-3 rounded-lg"></div>
+<p class="text-gray-500 text-xs mb-4">Select a style preset and generate fresh AI music matching that vibe. No upload needed.</p>
 <select id="rv-style" class="auth-input mb-4">
 <option value="modern-radio">Modern Radio</option>
 <option value="lo-fi">Lo-Fi / Chill</option>
@@ -163,8 +157,8 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 <option value="acoustic-session">Acoustic Session</option>
 <option value="electronic-club">Electronic Club</option>
 </select>
-<button onclick="revampTrack()" id="rv-btn" class="gen-btn">🎛️ Revamp Track</button>
-<div id="rv-status" class="gen-status"><div class="spinner" style="width:16px;height:16px"></div><span id="rv-status-txt">Revamping...</span></div>
+<button onclick="revampTrack()" id="rv-btn" class="gen-btn">🎛️ Generate Revamp</button>
+<div id="rv-status" class="gen-status"><div class="spinner" style="width:16px;height:16px"></div><span id="rv-status-txt">Generating revamp...</span></div>
 <div id="rv-err" class="hidden text-red-400 text-xs mt-2 bg-red-900/20 p-3 rounded-lg"></div>
 <div id="rv-result" class="gen-result">
 <p class="text-xs text-gray-400 mb-2">Revamped Track (<span id="rv-style-name">Modern Radio</span>):</p>
@@ -374,16 +368,13 @@ async function stemSeparate(){
   if(btn)btn.disabled=false
 }
 
-function rvFileSelected(e){var f=e.target.files[0];if(!f)return;var info=document.getElementById('rv-file-info');if(info){info.classList.remove('hidden');info.textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}}
 async function revampTrack(){
-  var file=document.getElementById('rv-file');if(!file||!file.files[0]){showToolErr('rv','Upload an audio file first');return}
-  var f=file.files[0];var style=document.getElementById('rv-style');var s=style?style.value:'modern-radio';
+  var style=document.getElementById('rv-style');var s=style?style.value:'modern-radio';
   var styleNames={'modern-radio':'Modern Radio','lo-fi':'Lo-Fi / Chill','warm-vinyl':'Warm Vinyl','underground-rap':'Underground Rap','acoustic-session':'Acoustic Session','electronic-club':'Electronic Club'};
   var btn=document.getElementById('rv-btn');if(btn)btn.disabled=true;
-  hideResult('rv');showStatus('rv','Revamping track...');
-  var fd=new FormData();fd.append('audio',f);fd.append('style',s);
+  hideResult('rv');showStatus('rv','Generating revamp with AI...');
   try{
-    var r=await fetch(API+'/revamp',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
+    var r=await fetch(API+'/revamp',{method:'POST',headers:{'Content-Type':'application/json','x-auth-token':getToken()},body:JSON.stringify({style:s})});
     var d=await r.json();hideStatus('rv');
     if(!r.ok){showToolErr('rv',d.error||'Revamp failed');if(btn)btn.disabled=false;return}
     var audio=document.getElementById('rv-audio');if(audio){audio.src=d.audioUrl;audio.play()}
