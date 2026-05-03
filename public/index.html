@@ -20,8 +20,8 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 .preset-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
 .preset-card{background:#0a0a0a;border:2px solid #1f1f1f;border-radius:12px;padding:16px;cursor:pointer;transition:all .25s;text-align:center;position:relative;overflow:hidden}
 .preset-card:hover{border-color:#333;transform:translateY(-2px)}
-.preset-card.active{border-color:var(--pc, #cc0000);background:linear-gradient(135deg, #0a0a0a, var(--pc, #cc0000)20)}
-.preset-card.active::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,var(--pc, #cc0000)20,transparent 70%);opacity:.15}
+.preset-card.active{border-color:var(--pc, #cc0000);background:linear-gradient(135deg, #0a0a0a, var(--pc, #cc0000) 20%)}
+.preset-card.active::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,var(--pc, #cc0000) 20%,transparent 70%);opacity:.15}
 .preset-icon{font-size:28px;margin-bottom:8px;display:block}
 .preset-name{font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;margin-bottom:4px}
 .preset-desc{font-size:10px;color:#666;line-height:1.4}
@@ -71,6 +71,13 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 <body class="antialiased min-h-screen">
 
 <div id="preloader"><div class="spinner"></div></div>
+<script>
+// Failsafe: hide preloader even if CDN scripts fail
+(function(){
+  var t=setTimeout(function(){var p=document.getElementById('preloader');if(p)p.style.display='none'},4000);
+  window.addEventListener('DOMContentLoaded',function(){clearTimeout(t);var p=document.getElementById('preloader');if(p)p.style.display='none'});
+})();
+</script>
 
 <!-- Nav -->
 <header class="fixed top-0 w-full z-40 bg-[#0a0a0a]/95 border-b border-white/5">
