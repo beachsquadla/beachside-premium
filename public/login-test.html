@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beachside Premium | Sign In</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.card{background:#0a0a0a;border:1px solid #222;border-radius:16px;padding:40px;width:100%;max-width:400px}
+h1{font-size:24px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;text-align:center;margin-bottom:8px}
+h1 span{color:#cc0000}
+.sub{color:#666;font-size:12px;text-align:center;margin-bottom:32px}
+input{width:100%;background:#111;border:1px solid #333;border-radius:8px;padding:14px;color:#fff;font-size:14px;margin-bottom:12px;outline:none}
+input:focus{border-color:#cc0000}
+button{width:100%;background:#cc0000;color:#fff;padding:14px;border:none;border-radius:8px;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;cursor:pointer;margin-top:8px}
+button:disabled{opacity:.5}
+#status{text-align:center;font-size:12px;margin-top:16px;min-height:20px}
+#status.error{color:#f44}
+#status.success{color:#4f4}
+#status.loading{color:#cc0}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Beachside <span>✦</span> Premium</h1>
+<p class="sub">VIP Studio Access</p>
+<input type="email" id="email" placeholder="Email" autocomplete="email">
+<input type="password" id="pass" placeholder="Password" autocomplete="current-password">
+<button id="btn" onclick="doLogin()">Sign In</button>
+<div id="status"></div>
+</div>
+
+<script>
+const API = 'https://api.beachsiderecordingstudio.us/api/premium';
+
+function status(msg, type) {
+  var s = document.getElementById('status');
+  s.textContent = msg;
+  s.className = type || '';
+}
+
+async function doLogin() {
+  var email = document.getElementById('email').value.trim();
+  var pass = document.getElementById('pass').value;
+  if (!email || !pass) { status('Enter email and password', 'error'); return; }
+  
+  var btn = document.getElementById('btn');
+  btn.disabled = true;
+  status('Connecting...', 'loading');
+  
+  try {
+    var r = await fetch(API + '/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, password: pass })
+    });
+    var d = await r.json();
+    if (!r.ok) { status(d.error || 'Login failed', 'error'); btn.disabled = false; return; }
+    status('✓ Signed in as ' + d.user.name + ' — ' + d.user.credits + ' credits', 'success');
+    btn.textContent = '✓ SUCCESS';
+    btn.style.background = '#0a0';
+  } catch (err) {
+    status('Error: ' + err.message, 'error');
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
