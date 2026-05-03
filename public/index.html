@@ -7,11 +7,13 @@
 <title>Beachside Premium | VIP Studio Tools</title>
 <!-- deploy: remaster-v2 -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Oswald:wght@400;500;700&family=Anton&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com" defer></script>
+<script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:['Oswald','sans-serif'],urban:['Anton','sans-serif']},colors:{trs:{red:'#cc0000',dark:'#0a0a0a',gray:'#1f1f1f'}}}}}
 </script>
-<script src="https://unpkg.com/lucide@latest" defer></script>
+<style>
+<script src="https://unpkg.com/lucide@latest"></script>
+
 <style>
 :root{scroll-behavior:smooth}body{background:#000;color:#fff;overflow-x:hidden;-webkit-overflow-scrolling:touch;font-family:'Inter',sans-serif}a,button,input,select{touch-action:manipulation}.auth-input{width:100%;background:#111;border:1px solid #333;border-radius:8px;padding:12px 16px;color:#fff;font-size:14px;outline:none;transition:border-color .2s}.auth-input:focus{border-color:#cc0000}.auth-btn{width:100%;background:#cc0000;color:#fff;padding:14px;border:none;border-radius:8px;font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;cursor:pointer;transition:all .2s}.auth-btn:hover{background:#fff;color:#000}.auth-btn:disabled{opacity:0.5;cursor:not-allowed}.card{background:#0a0a0a;border:1px solid #1f1f1f;border-radius:12px;padding:24px;transition:border-color .3s}.card:hover{border-color:#cc0000}.tool-card{background:#0a0a0a;border:1px solid #1f1f1f;border-radius:12px;padding:20px;transition:all .3s}.tool-card:hover{border-color:#cc0000}.usage-bar{width:100%;height:6px;background:#1f1f1f;border-radius:3px;overflow:hidden}.usage-fill{height:100%;background:#cc0000;border-radius:3px;transition:width .5s}.badge{display:inline-block;background:#cc0000;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 8px;border-radius:4px}.view{display:none;animation:fade .3s}.view.active{display:block}.tool-section{display:none}.tool-section.active{display:block}@keyframes fade{from{opacity:0}to{opacity:1}}.spinner{width:40px;height:40px;border:3px solid #1f1f1f;border-top:3px solid #cc0000;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}#preloader{position:fixed;inset:0;z-index:10000;background:#000;display:flex;align-items:center;justify-content:center;transition:opacity .3s}#preloader.hidden{opacity:0;visibility:hidden;pointer-events:none}.gen-btn{background:#cc0000;color:#fff;padding:10px 24px;border:none;border-radius:8px;font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;cursor:pointer;transition:all .2s;width:100%}.gen-btn:hover{background:#fff;color:#000}.gen-btn:disabled{opacity:0.5;cursor:not-allowed}.gen-status{display:none;align-items:center;gap:8px;padding:10px 14px;background:#111;border:1px solid #333;border-radius:8px;margin-top:12px;font-size:12px;color:#aaa}.gen-status.active{display:flex}.gen-result{display:none;margin-top:12px;padding:12px;background:#111;border:1px solid #333;border-radius:8px}.gen-result.active{display:block}
 /* ═══════════════════════════════════════════════════════
@@ -76,7 +78,7 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 // Failsafe: hide preloader even if CDN scripts fail
 (function(){
   var t=setTimeout(function(){var p=document.getElementById('preloader');if(p)p.style.display='none'},4000);
-  document.addEventListener('DOMContentLoaded',function(){clearTimeout(t);var p=document.getElementById('preloader');if(p)p.style.display='none'});
+  window.addEventListener('DOMContentLoaded',function(){clearTimeout(t);var p=document.getElementById('preloader');if(p)p.style.display='none'});
 })();
 </script>
 
@@ -363,143 +365,381 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 </footer>
 
 <script>
+
+function dbg(m){var e=document.getElementById("debug-status");if(e){e.style.display="block";e.textContent="[DEBUG] "+m;console.log("[BS]",m)}}
+
 const API = 'https://api.beachsiderecordingstudio.us/api/premium';
 let user = null;
 
-// Simple token helpers
-function setToken(t){if(t)try{localStorage.setItem('bstoken',t)}catch(e){}}
-function getToken(){try{return localStorage.getItem('bstoken')||''}catch(e){return ''}}
-function clearToken(){try{localStorage.removeItem('bstoken')}catch(e){}}
+// Token helpers (MUST be defined before any code that uses them)
+function setToken(t){if(t)localStorage.setItem('bstoken',t)}
+function getToken(){return localStorage.getItem('bstoken')||''}
+function clearToken(){localStorage.removeItem('bstoken')}
 
-// Hide preloader immediately
-(function(){
-  var p=document.getElementById('preloader');
-  if(p){p.style.display='none'}
-})();
+// Init
+window.addEventListener('load',function(){var p=document.getElementById('preloader');if(p)p.classList.add('hidden')});
+setTimeout(function(){var p=document.getElementById('preloader');if(p)p.classList.add('hidden')},5000);
+document.addEventListener('DOMContentLoaded',function(){lucide.createIcons();checkSession()});
 
 // Navigation
 function showView(id){
-  document.querySelectorAll('.view').forEach(function(v){v.classList.add('hidden');v.classList.remove('active')});
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');v.classList.add('hidden')});
   var el=document.getElementById('view-'+id);
   if(el){el.classList.remove('hidden');el.classList.add('active')}
-}
-
-// Auth UI helpers
-function authErr(m){
-  var e=document.getElementById('auth-err');
-  if(e){e.textContent=m;e.classList.remove('hidden');setTimeout(function(){e.classList.add('hidden')},5000)}
-}
-function authLoad(s){
-  var el=document.getElementById('auth-load');
-  if(el){if(s)el.classList.remove('hidden');else el.classList.add('hidden')}
-}
-
-// Login — SIMPLE version that WORKS
-async function login(){
-  var em=document.getElementById('lemail'),pw=document.getElementById('lpass');
-  if(!em||!pw)return;
-  var e=em.value.trim(),p=pw.value;
-  if(!e||!p){authErr('Fill in all fields');return}
-  authLoad(true);
-  try{
-    var r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,password:p})});
-    var d=await r.json();
-    authLoad(false);
-    if(!r.ok){authErr(d.error||'Login failed');return}
-    setToken(d.token);
-    user=d.user;
-    // Update nav
-    var si=document.getElementById('nav-signin'),lo=document.getElementById('nav-logout'),da=document.getElementById('nav-dash'),wel=document.getElementById('welcome');
-    if(si)si.style.display='none';
-    if(lo)lo.style.display='inline-block';
-    if(da)da.style.display='inline-block';
-    if(wel)wel.textContent=user.name||user.email;
-    showView('dashboard')
-  }catch(err){
-    authLoad(false);
-    authErr('Connection error — '+err.message)
-  }
-}
-
-// Register — simple
-async function register(){
-  var nm=document.getElementById('rname'),em=document.getElementById('remail'),pw=document.getElementById('rpass'),iv=document.getElementById('rinvite');
-  if(!nm||!em||!pw){authErr('Fill in all fields');return}
-  var n=nm.value.trim(),e=em.value.trim(),p=pw.value,c=(iv?iv.value:'').trim().toUpperCase();
-  if(!n||!e||!p||!c){authErr('Fill in all fields');return}
-  authLoad(true);
-  try{
-    var r=await fetch(API+'/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,email:e,password:p,inviteCode:c})});
-    var d=await r.json();
-    authLoad(false);
-    if(!r.ok){authErr(d.error||'Registration failed');return}
-    setToken(d.token);user=d.user;
-    // Show dashboard
-    var si=document.getElementById('nav-signin'),lo=document.getElementById('nav-logout'),da=document.getElementById('nav-dash'),wel=document.getElementById('welcome');
-    if(si)si.style.display='none';
-    if(lo)lo.style.display='inline-block';
-    if(da)da.style.display='inline-block';
-    if(wel)wel.textContent=user.name||user.email;
-    showView('dashboard')
-  }catch(err){authLoad(false);authErr('Connection error — '+err.message)}
-}
-
-function logout(){
-  var t=getToken();if(t)fetch(API+'/logout',{method:'POST',headers:{'x-auth-token':t}}).catch(function(){});
-  clearToken();user=null;
-  document.querySelectorAll('.view').forEach(function(v){v.classList.add('hidden');v.classList.remove('active')});
-  var lv=document.getElementById('view-login');if(lv){lv.classList.remove('hidden');lv.classList.add('active')}
-  var si=document.getElementById('nav-signin'),lo=document.getElementById('nav-logout'),da=document.getElementById('nav-dash');
-  if(si)si.style.display='inline-block';
-  if(lo)lo.style.display='none';
-  if(da)da.style.display='none'
+  window.scrollTo(0,0)
 }
 
 function switchTab(t){
   var lf=document.getElementById('form-login'),rf=document.getElementById('form-reg'),lt=document.getElementById('ltab'),rt=document.getElementById('rtab');
   if(t==='login'){
-    if(lf)lf.classList.remove('hidden');if(rf)rf.classList.add('hidden');
-    if(lt){lt.className='pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition'}
-    if(rt){rt.className='pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition'}
-  }else{
-    if(lf)lf.classList.add('hidden');if(rf)rf.classList.remove('hidden');
-    if(lt){lt.className='pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition'}
-    if(rt){rt.className='pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition'}
+    lf.classList.remove('hidden');rf.classList.add('hidden');
+    lt.className='pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition';
+    rt.className='pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition'
+  } else {
+    lf.classList.add('hidden');rf.classList.remove('hidden');
+    lt.className='pb-4 px-4 font-display uppercase tracking-widest text-gray-500 border-b-2 border-transparent hover:text-white transition';
+    rt.className='pb-4 px-4 font-display uppercase tracking-widest text-trs-red border-b-2 border-trs-red transition'
   }
 }
 
-// Tool tabs
+// Open tool - support remaster
 function openTool(tool){
   document.querySelectorAll('.tool-section').forEach(function(s){s.classList.remove('active');s.classList.add('hidden')});
   document.querySelectorAll('.tool-tab').forEach(function(b){b.style.background='transparent';b.style.color='';b.style.borderColor='rgba(255,255,255,0.2)'});
   var el=document.getElementById('tool-'+tool);
   if(el){el.classList.remove('hidden');el.classList.add('active')}
-  var btns=document.querySelectorAll('.tool-tab'),idx=0;
+  var btns=document.querySelectorAll('.tool-tab');var idx=0;
   if(tool==='text-to-music')idx=0;else if(tool==='stem-separate')idx=1;else if(tool==='revamp')idx=2;else if(tool==='beat-variations')idx=3;else if(tool==='remaster')idx=4;
   if(btns&&btns[idx]){btns[idx].style.background='#cc0000';btns[idx].style.color='#fff';btns[idx].style.borderColor='#cc0000'}
+  setTimeout(function(){lucide.createIcons()},50)
 }
 
-// Auto-login check
+function authErr(m){
+  var e=document.getElementById('auth-err');
+  if(!e)return;
+  e.textContent=m;e.classList.remove('hidden');
+  setTimeout(function(){e.classList.add('hidden')},5000)
+}
+function authLoad(s){var el=document.getElementById('auth-load');if(el)el.classList.toggle('hidden',!s)}
+
+async function login(){
+  var email=document.getElementById('lemail');
+  var pass=document.getElementById('lpass');
+  dbg('login() called');
+  if(!email||!pass){dbg('missing email/pass fields');authErr('Fill in all fields');return}
+  var e=email.value.trim(),p=pass.value;
+  if(!e||!p){dbg('empty email/pass');authErr('Fill in all fields');return}
+  dbg('calling API: '+API+'/login');
+  authLoad(true);
+  try{
+    var r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,password:p})});
+    dbg('API response: '+r.status);
+    var d=await r.json();dbg('parsed JSON: '+(d.user?d.user.email:'no user'));
+    authLoad(false);
+    if(!r.ok){dbg('API error: '+(d.error||'unknown'));authErr(d.error||'Login failed');return}
+    dbg('saving token...');
+    try{setToken(d.token)}catch(e){dbg('token save failed: '+e.message);authErr('Storage error — try enabling cookies');authLoad(false);return}
+    user=d.user;dbg('user set, calling updateUI');
+    try{updateUI()}catch(e){dbg('updateUI error: '+e.message)}
+    dbg('calling showView dashboard');
+    try{showView('dashboard')}catch(e){dbg('showView error: '+e.message)}
+    dbg('login complete!')
+  }catch(err){
+    authLoad(false);
+    dbg('LOGIN CATCH: '+err.message);
+    console.error('Login error:',err);
+    authErr('Connection error — '+err.message)
+  }
+}
+
+async function register(){
+  var n=document.getElementById('rname'),e=document.getElementById('remail'),p=document.getElementById('rpass'),iv=document.getElementById('rinvite');
+  if(!n||!e||!p||!iv){authErr('Fill in all fields');return}
+  var name=n.value.trim(),email=e.value.trim(),pass=p.value,code=iv.value.trim().toUpperCase();
+  if(!name||!email||!pass||!code){authErr('Fill in all fields');return}
+  if(pass.length<6){authErr('Password must be 6+ characters');return}
+  authLoad(true);
+  try{
+    var r=await fetch(API+'/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,email:email,password:pass,inviteCode:code})});
+    var d=await r.json();authLoad(false);
+    if(!r.ok){authErr(d.error||'Registration failed');return}
+    setToken(d.token);user=d.user;updateUI();showView('dashboard')
+  }catch(err){authLoad(false);console.error('Register error:',err);authErr('Connection error')}
+}
+
+async function logout(){
+  try{var t=getToken();if(t)await fetch(API+'/logout',{method:'POST',headers:{'x-auth-token':t}})}catch(e){}
+  clearToken();user=null;updateUI();showView('login')
+}
+
 async function checkSession(){
   var t=getToken();if(!t)return;
   try{
     var r=await fetch(API+'/me',{headers:{'x-auth-token':t}});
     var d=await r.json();
-    if(d.user){user=d.user;
-      var si=document.getElementById('nav-signin'),lo=document.getElementById('nav-logout'),da=document.getElementById('nav-dash'),wel=document.getElementById('welcome');
-      if(si)si.style.display='none';
-      if(lo)lo.style.display='inline-block';
-      if(da)da.style.display='inline-block';
-      if(wel)wel.textContent=user.name||user.email;
-      showView('dashboard')
-    }
+    if(d.authenticated&&d.user){user=d.user;updateUI();showView('dashboard')}
   }catch(e){}
 }
 
-// Init
-checkSession();
-window.addEventListener('load',function(){checkSession()});
-setTimeout(function(){openTool('text-to-music')},200);
+function updateUI(){
+  var si=document.getElementById('nav-signin'),lo=document.getElementById('nav-logout'),da=document.getElementById('nav-dash'),st=document.getElementById('nav-status'),wel=document.getElementById('welcome'),plan=document.getElementById('plan-text'),utxt=document.getElementById('usage-txt'),ubar=document.getElementById('usage-bar');
+  if(user){
+    if(si)si.classList.add('hidden');if(lo)lo.classList.remove('hidden');if(da)da.classList.remove('hidden');
+    if(st){st.textContent=user.name||user.email;st.classList.remove('hidden')}
+    if(wel)wel.textContent=user.name||user.email;
+    if(plan)plan.textContent=(user.plan||'Premium').toUpperCase()+' Plan';
+    var u=user.generationsUsed||0,m=user.maxGenerations||50;
+    if(utxt)utxt.textContent=u+' / '+m;
+    if(ubar)ubar.style.width=Math.min(100,(u/m)*100)+'%'
+  }else{
+    if(si)si.classList.remove('hidden');if(lo)lo.classList.add('hidden');if(da)da.classList.add('hidden');if(st)st.classList.add('hidden')
+  }
+}
+
+function showStatus(id,msg){var el=document.getElementById(id+'-status');if(el){el.classList.add('active');var t=document.getElementById(id+'-status-txt');if(t)t.textContent=msg}}
+function hideStatus(id){var el=document.getElementById(id+'-status');if(el)el.classList.remove('active')}
+function showToolErr(id,msg){var el=document.getElementById(id+'-err');if(el){el.textContent=msg;el.classList.remove('hidden')};setTimeout(function(){if(el)el.classList.add('hidden')},8000)}
+function hideToolErr(id){var el=document.getElementById(id+'-err');if(el)el.classList.add('hidden')}
+function showResult(id){var el=document.getElementById(id+'-result');if(el)el.classList.add('active')}
+function hideResult(id){var el=document.getElementById(id+'-result');if(el)el.classList.remove('active')}
+
+// Text to Music
+async function generateMusic(){
+  var prompt=document.getElementById('ttm-prompt');if(!prompt)return;
+  var txt=prompt.value.trim();if(!txt){showToolErr('ttm','Enter a prompt first');if(btn)btn.disabled=false;return}
+  var lyrics=document.getElementById('ttm-lyrics');
+  var lyr=lyrics?lyrics.value.trim():'';
+  var dur=document.getElementById('ttm-duration');var d=dur?parseInt(dur.value):15;
+  var btn=document.getElementById('ttm-btn');if(btn)btn.disabled=true;
+  hideResult('ttm');showStatus('ttm','Generating music with AI...');
+  try{
+    var body={prompt:txt,duration:d};
+    if(lyr)body.lyrics_prompt=lyr;
+    var r=await fetch(API+'/text-to-music',{method:'POST',headers:{'Content-Type':'application/json','x-auth-token':getToken()},body:JSON.stringify(body)});
+    var data=await r.json();hideStatus('ttm');
+    if(!r.ok){showToolErr('ttm',data.error||'Generation failed');if(btn)btn.disabled=false;return}
+    var audio=document.getElementById('ttm-audio');
+    if(audio){audio.src=data.audioUrl;audio.play()}
+    showResult('ttm');
+    if(user&&data.generationsUsed!==undefined){user.generationsUsed=data.generationsUsed;user.maxGenerations=data.maxGenerations;updateUI()}
+  }catch(e){hideStatus('ttm');showToolErr('ttm','Generation failed. '+e.message)}
+  if(btn)btn.disabled=false
+}
+
+function ssFileSelected(e){var f=e.target.files[0];if(!f)return;var info=document.getElementById('ss-file-info');if(info){info.classList.remove('hidden');info.textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}}
+async function stemSeparate(){
+  var file=document.getElementById('ss-file');if(!file||!file.files[0]){showToolErr('ss','Upload an audio file first');return}
+  var f=file.files[0];var btn=document.getElementById('ss-btn');if(btn)btn.disabled=true;
+  hideResult('ss');showStatus('ss','Separating stems...');
+  var fd=new FormData();fd.append('audio',f);
+  try{
+    var r=await fetch(API+'/stem-separate',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
+    var d=await r.json();hideStatus('ss');
+    if(!r.ok){showToolErr('ss',d.error||'Separation failed');if(btn)btn.disabled=false;return}
+    var c=document.getElementById('ss-stems');if(c){c.innerHTML='';if(d.stems){Object.keys(d.stems).forEach(function(k){c.innerHTML+='<div class=\"flex items-center justify-between bg-[#111] p-2 rounded-lg\"><span class=\"text-xs text-white uppercase tracking-widest\">'+k+'</span><audio src=\"'+d.stems[k]+'\" controls style=\"height:32px;border-radius:4px;width:140px\"></audio></div>'})}}
+    showResult('ss');if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
+  }catch(e){hideStatus('ss');showToolErr('ss','Separation failed. '+e.message)}
+  if(btn)btn.disabled=false
+}
+
+async function revampTrack(){
+  var style=document.getElementById('rv-style');var s=style?style.value:'modern-radio';
+  var styleNames={'modern-radio':'Modern Radio','lo-fi':'Lo-Fi / Chill','warm-vinyl':'Warm Vinyl','underground-rap':'Underground Rap','acoustic-session':'Acoustic Session','electronic-club':'Electronic Club'};
+  var btn=document.getElementById('rv-btn');if(btn)btn.disabled=true;
+  hideResult('rv');showStatus('rv','Generating revamp with AI...');
+  try{
+    var r=await fetch(API+'/revamp',{method:'POST',headers:{'Content-Type':'application/json','x-auth-token':getToken()},body:JSON.stringify({style:s})});
+    var d=await r.json();hideStatus('rv');
+    if(!r.ok){showToolErr('rv',d.error||'Revamp failed');if(btn)btn.disabled=false;return}
+    var audio=document.getElementById('rv-audio');if(audio){audio.src=d.audioUrl;audio.play()}
+    var sn=document.getElementById('rv-style-name');if(sn)sn.textContent=styleNames[s]||s;
+    showResult('rv');if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
+  }catch(e){hideStatus('rv');showToolErr('rv','Revamp failed. '+e.message)}
+  if(btn)btn.disabled=false
+}
+
+function bvFileSelected(e){var f=e.target.files[0];if(!f)return;var info=document.getElementById('bv-file-info');if(info){info.classList.remove('hidden');info.textContent='📄 '+f.name+' ('+Math.round(f.size/1024)+' KB)'}}
+async function beatVariations(){
+  var file=document.getElementById('bv-file');if(!file||!file.files[0]){showToolErr('bv','Upload a beat file first');return}
+  var f=file.files[0];var mood=document.getElementById('bv-mood');var m=mood?mood.value:'upbeat';
+  var btn=document.getElementById('bv-btn');if(btn)btn.disabled=true;
+  hideResult('bv');showStatus('bv','Generating beat variation...');
+  var fd=new FormData();fd.append('audio',f);fd.append('mood',m);
+  try{
+    var r=await fetch(API+'/beat-variations',{method:'POST',headers:{'x-auth-token':getToken()},body:fd});
+    var d=await r.json();hideStatus('bv');
+    if(!r.ok){showToolErr('bv',d.error||'Generation failed');if(btn)btn.disabled=false;return}
+    var audio=document.getElementById('bv-audio');if(audio){audio.src=d.audioUrl;audio.play()}
+    showResult('bv');if(user&&d.generationsUsed!==undefined){user.generationsUsed=d.generationsUsed;user.maxGenerations=d.maxGenerations;updateUI()}
+  }catch(e){hideStatus('bv');showToolErr('bv','Beat variation failed. '+e.message)}
+  if(btn)btn.disabled=false
+}
+
+// ═══════════════════════════════════════════════════════
+// AI REMASTER ENGINE
+// ═══════════════════════════════════════════════════════
+let masterState = { file: null, refFile: null, preset: 'clean', jobId: null, originalUrl: null, masteredUrl: null, polling: null };
+
+function selectPreset(p, el) {
+  masterState.preset = p;
+  document.querySelectorAll('.preset-card').forEach(function(c) { c.classList.remove('active') });
+  if (el) el.classList.add('active');
+}
+
+function masterFileSelected(e) {
+  var f = e.target.files[0];
+  if (!f) return;
+  masterState.file = f;
+  var info = document.getElementById('master-file-info');
+  var name = document.getElementById('master-file-name');
+  var size = document.getElementById('master-file-size');
+  var drop = document.getElementById('master-drop');
+  var btn = document.getElementById('master-btn');
+  if (info) info.classList.add('active');
+  if (name) name.textContent = f.name;
+  if (size) size.textContent = (f.size / 1024 / 1024).toFixed(1) + ' MB';
+  if (drop) drop.classList.add('has-file');
+  if (btn) btn.disabled = false;
+
+  // Set original audio for A/B comparison
+  var aud = document.getElementById('master-original-audio');
+  if (aud && f) { aud.src = URL.createObjectURL(f); }
+}
+
+function clearMasterFile() {
+  masterState.file = null;
+  document.getElementById('master-file-info').classList.remove('active');
+  document.getElementById('master-drop').classList.remove('has-file');
+  document.getElementById('master-btn').disabled = true;
+  document.getElementById('master-file').value = '';
+  var aud = document.getElementById('master-original-audio');
+  if (aud) { aud.src = ''; URL.revokeObjectURL(aud.src); }
+  resetMaster();
+}
+
+function masterRefSelected(e) {
+  var f = e.target.files[0];
+  if (!f) return;
+  masterState.refFile = f;
+  var info = document.getElementById('master-ref-info');
+  if (info) { info.textContent = f.name; info.classList.add('active'); }
+}
+
+async function startMaster() {
+  if (!masterState.file) { showMasterErr('Upload a track first'); return; }
+  if (masterState.polling) { clearInterval(masterState.polling); }
+
+  var btn = document.getElementById('master-btn');
+  var progress = document.getElementById('master-progress');
+  var comp = document.getElementById('compare-section');
+  var err = document.getElementById('master-err');
+
+  if (btn) btn.disabled = true;
+  if (comp) comp.classList.remove('active');
+  if (err) err.classList.add('hidden');
+  if (progress) { progress.classList.add('active'); }
+  updateMasterProgress('Starting mastering engine...', 'Uploading audio');
+
+  try {
+    // Upload file
+    var fd = new FormData();
+    fd.append('file', masterState.file);
+    fd.append('preset', masterState.preset);
+    if (masterState.refFile) fd.append('reference', masterState.refFile);
+
+    var r = await fetch(API + '/master', { method: 'POST', headers: { 'x-auth-token': getToken() }, body: fd });
+    var d = await r.json();
+    if (!r.ok) { showMasterErr(d.error || 'Upload failed'); if (progress) progress.classList.remove('active'); if (btn) btn.disabled = false; return; }
+
+    masterState.jobId = d.job_id;
+    if (d.credits_remaining !== undefined) { user.credits = d.credits_remaining; updateUI(); }
+
+    // Poll for completion
+    var startTime = Date.now();
+    updateMasterProgress('AI mastering in progress...', d.preset ? 'Preset: ' + d.preset.toUpperCase() : 'Processing');
+    masterState.polling = setInterval(async function () {
+      var elapsed = (Date.now() - startTime) / 1000;
+      updateMasterProgressBar(Math.min(90, elapsed * 6)); // ~15s full
+      updateMasterProgressSub(elapsed < 5 ? 'Running EQ matching...' : elapsed < 10 ? 'Applying compression & stereo imaging...' : elapsed < 15 ? 'Final limiting & loudness...' : 'Almost done...');
+
+      try {
+        var sr = await fetch(API + '/master/status/' + masterState.jobId, { headers: { 'x-auth-token': getToken() } });
+        var sd = await sr.json();
+        if (sd.status === 'done') {
+          clearInterval(masterState.polling);
+          masterState.polling = null;
+          updateMasterProgressBar(100);
+          updateMasterProgress('Mastering complete!', '✓ Your track has been professionally mastered');
+
+          // Fetch result
+          try {
+            var rr = await fetch(API + '/master/result/' + masterState.jobId, { headers: { 'x-auth-token': getToken() } });
+            var rd = await rr.json();
+
+            // Build download URL — mastered file served from remaster API storage
+            var dlUrl = 'https://api.beachsiderecordingstudio.us/api/premium/master/download/' + masterState.jobId;
+            masterState.masteredUrl = dlUrl;
+
+            // Show A/B comparison
+            var aud = document.getElementById('master-result-audio');
+            if (aud) { aud.src = dlUrl; aud.load(); }
+
+            if (progress) setTimeout(function () { progress.classList.remove('active'); }, 1000);
+            if (comp) setTimeout(function () { comp.classList.add('active'); }, 500);
+            if (btn) btn.classList.add('hidden');
+          } catch (e) {
+            showMasterErr('Processing complete but failed to fetch result: ' + e.message);
+            if (progress) progress.classList.remove('active');
+          }
+        } else if (sd.status === 'error') {
+          clearInterval(masterState.polling);
+          masterState.polling = null;
+          showMasterErr(sd.error || 'Mastering failed');
+          if (progress) progress.classList.remove('active');
+          if (btn) btn.disabled = false;
+        }
+      } catch (e) { /* poll error - ignore */ }
+    }, 2000);
+  } catch (e) {
+    showMasterErr('Connection error: ' + e.message);
+    if (progress) progress.classList.remove('active');
+    if (btn) btn.disabled = false;
+  }
+}
+
+function updateMasterProgress(title, sub) {
+  var t = document.getElementById('master-progress-title');
+  var s = document.getElementById('master-progress-sub');
+  if (t) t.textContent = title;
+  if (s) s.textContent = sub;
+}
+function updateMasterProgressSub(sub) { var s = document.getElementById('master-progress-sub'); if (s) s.textContent = sub; }
+function updateMasterProgressBar(pct) { var b = document.getElementById('master-progress-fill'); if (b) b.style.width = Math.min(100, pct) + '%'; }
+
+function showMasterErr(msg) {
+  var e = document.getElementById('master-err');
+  if (e) { e.textContent = msg; e.classList.remove('hidden'); setTimeout(function () { e.classList.add('hidden'); }, 8000); }
+}
+
+function downloadMaster() {
+  if (masterState.masteredUrl) window.open(masterState.masteredUrl, '_blank');
+}
+
+function resetMaster() {
+  if (masterState.polling) { clearInterval(masterState.polling); masterState.polling = null; }
+  masterState.jobId = null;
+  masterState.masteredUrl = null;
+  document.getElementById('compare-section').classList.remove('active');
+  document.getElementById('master-progress').classList.remove('active');
+  document.getElementById('master-btn').classList.remove('hidden');
+  document.getElementById('master-btn').disabled = !masterState.file;
+  document.getElementById('master-err').classList.add('hidden');
+  document.getElementById('master-progress-fill').style.width = '0%';
+  var aud = document.getElementById('master-result-audio'); if (aud) aud.src = '';
+}
+
+// Init: open first tool
+setTimeout(function(){openTool('text-to-music')},100);
 </script>
 </body>
 </html>
