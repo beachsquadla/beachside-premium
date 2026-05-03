@@ -426,28 +426,48 @@ async function login(){
   var email=document.getElementById('lemail');
   var pass=document.getElementById('lpass');
   dbg('login() called');
-  if(!email||!pass){dbg('missing email/pass fields');authErr('Fill in all fields');return}
+  if(!email||!pass){dbg('missing fields');authErr('Fill in all fields');return}
   var e=email.value.trim(),p=pass.value;
-  if(!e||!p){dbg('empty email/pass');authErr('Fill in all fields');return}
-  dbg('calling API: '+API+'/login');
+  if(!e||!p){dbg('empty values');authErr('Fill in all fields');return}
+  dbg('fetching '+API+'/login');
   authLoad(true);
   try{
-    var r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,password:p})});
+    var controller=new AbortController();
+    var timeout=setTimeout(function(){controller.abort()},10000);
+    var r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,password:p}),signal:controller.signal});
+    clearTimeout(timeout);
     dbg('API response: '+r.status);
-    var d=await r.json();dbg('parsed JSON: '+(d.user?d.user.email:'no user'));
+    var d=await r.json();
+    dbg('got user: '+(d.user?d.user.email:'NONE'));
     authLoad(false);
-    if(!r.ok){dbg('API error: '+(d.error||'unknown'));authErr(d.error||'Login failed');return}
-    dbg('saving token...');
-    try{setToken(d.token)}catch(e){dbg('token save failed: '+e.message);authErr('Storage error — try enabling cookies');authLoad(false);return}
-    user=d.user;dbg('user set, calling updateUI');
-    try{updateUI()}catch(e){dbg('updateUI error: '+e.message)}
-    dbg('calling showView dashboard');
-    try{showView('dashboard')}catch(e){dbg('showView error: '+e.message)}
-    dbg('login complete!')
+    if(!r.ok){dbg('API error: '+d.error);authErr(d.error||'Login failed ('+r.status+')');return}
+    dbg('API OK — saving token');
+    try{localStorage.setItem('bstoken',d.token||'')}catch(lsErr){
+      dbg('localStorage blocked!');
+      authErr('Please enable cookies/localStorage in your browser settings');
+      return
+    }
+    user=d.user;
+    dbg('token saved — switching to dashboard');
+    // Hide login, show dashboard
+    var loginView=document.getElementById('view-login');
+    var dashView=document.getElementById('view-dashboard');
+    if(loginView){loginView.classList.add('hidden');loginView.classList.remove('active')}
+    if(dashView){dashView.classList.remove('hidden');dashView.classList.add('active')}
+    // Update nav
+    var si=document.getElementById('nav-signin'),lo=document.getElementById('nav-logout'),
+        da=document.getElementById('nav-dash'),wel=document.getElementById('welcome');
+    if(si)si.classList.add('hidden');
+    if(lo)lo.classList.remove('hidden');
+    if(da)da.classList.remove('hidden');
+    if(wel)wel.textContent=user.name||user.email;
+    window.scrollTo(0,0);
+    dbg('DASHBOARD SHOWN — success!')
   }catch(err){
+    clearTimeout(timeout);
     authLoad(false);
-    dbg('LOGIN CATCH: '+err.message);
-    console.error('Login error:',err);
+    dbg('CATCH: '+err.message);
+    if(err.name==='AbortError'){authErr('Request timed out — check your connection');return}
     authErr('Connection error — '+err.message)
   }
 }
