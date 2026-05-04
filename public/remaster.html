@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#000000">
+<title>✦ AI Remaster | Beachside Premium</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Oswald:wght@400;500;700&family=Anton&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:['Oswald','sans-serif'],urban:['Anton','sans-serif']},colors:{trs:{red:'#cc0000',dark:'#0a0a0a',gray:'#1f1f1f'}}}}}
+</script>
+<style>
+:root{scroll-behavior:smooth}
+body{background:#000;color:#fff;overflow-x:hidden;font-family:'Inter',sans-serif}
+a,button,input,select{touch-action:manipulation}
+.badge{display:inline-block;background:#cc0000;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 8px;border-radius:4px}
+.gen-btn{background:#cc0000;color:#fff;padding:10px 24px;border:none;border-radius:8px;font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;cursor:pointer;transition:all .2s;width:100%}
+.gen-btn:hover{background:#fff;color:#000}
+.gen-btn:disabled{opacity:0.5;cursor:not-allowed}
+
+/* Presets */
+.preset-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.preset-card{background:#0a0a0a;border:2px solid #1f1f1f;border-radius:12px;padding:16px;cursor:pointer;transition:all .25s;text-align:center;position:relative;overflow:hidden}
+.preset-card:hover{border-color:#333;transform:translateY(-2px)}
+.preset-card.active{border-color:var(--pc, #cc0000);background:linear-gradient(135deg, #0a0a0a, var(--pc, #cc0000) 20%)}
+.preset-icon{font-size:28px;margin-bottom:8px;display:block}
+.preset-name{font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;margin-bottom:4px}
+.preset-desc{font-size:10px;color:#666;line-height:1.4}
+.preset-badge{display:inline-block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:2px 8px;border-radius:4px;margin-top:6px;background:var(--pc,#cc0000);color:#fff}
+
+/* Master Drop */
+.master-drop{border:2px dashed #1f1f1f;border-radius:16px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .3s;position:relative;margin-bottom:20px}
+.master-drop:hover,.master-drop.drag{border-color:#cc0000;background:rgba(204,0,0,.03)}
+.master-drop.has-file{border-style:solid;border-color:#1a3a1a;background:rgba(0,255,0,.02)}
+.master-drop-icon{font-size:48px;margin-bottom:12px;display:block;opacity:.4;transition:all .3s}
+.master-drop:hover .master-drop-icon,.master-drop.drag .master-drop-icon{opacity:.8;transform:translateY(-4px)}
+.master-drop-text{font-size:14px;color:#888;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.1em}
+.master-drop-sub{font-size:11px;color:#555;margin-top:4px}
+.master-file-info{display:none;align-items:center;gap:12px;background:#111;border:1px solid #1f3f1f;border-radius:10px;padding:12px 16px;margin-bottom:16px}
+.master-file-info.active{display:flex}
+.master-file-icon{width:40px;height:40px;background:rgba(204,0,0,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.master-file-name{font-size:12px;color:#ccc;font-family:'Inter',sans-serif;word-break:break-all}
+.master-file-size{font-size:10px;color:#666}
+.master-ref-upload{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:11px;color:#555;cursor:pointer;transition:color .2s}
+.master-ref-upload:hover{color:#cc0000}
+.master-ref-info{display:none;font-size:10px;color:#4a4;margin-left:auto}
+.master-ref-info.active{display:inline}
+.compare-section{display:none;margin-top:20px;padding-top:20px;border-top:1px solid #1f1f1f}
+.compare-section.active{display:block}
+.compare-players{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:640px){.compare-players{grid-template-columns:1fr}}
+.compare-player{background:#0a0a0a;border:1px solid #1f1f1f;border-radius:12px;padding:16px;text-align:center}
+.compare-label{font-family:'Oswald',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.compare-label.original{color:#666}
+.compare-label.mastered{color:#cc0000}
+.compare-player audio{width:100%;height:36px;border-radius:6px}
+.master-progress{display:none;align-items:center;gap:12px;background:#111;border:1px solid #1f1f1f;border-radius:10px;padding:16px;margin-top:12px;text-align:left}
+.master-progress.active{display:flex}
+.master-progress-spinner{flex-shrink:0;width:32px;height:32px;border:2px solid #1f1f1f;border-top:2px solid #cc0000;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.master-progress-text{flex:1}
+.master-progress-title{font-family:'Oswald',sans-serif;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#fff}
+.master-progress-sub{font-size:10px;color:#666;margin-top:2px}
+.master-progress-bar{margin-top:8px;height:3px;background:#1f1f1f;border-radius:2px;overflow:hidden}
+.master-progress-fill{height:100%;background:#cc0000;border-radius:2px;transition:width .5s;width:0%}
+.download-btn{display:none;width:100%;margin-top:12px;background:#cc0000;color:#fff;padding:12px;border:none;border-radius:8px;font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;cursor:pointer;transition:all .2s}
+.download-btn:hover{background:#fff;color:#000}
+.download-btn.active{display:block}
+.master-actions{display:flex;gap:8px}
+.undo-compare-btn{display:none;background:transparent;border:1px solid #333;color:#888;padding:8px 16px;border-radius:8px;font-size:11px;cursor:pointer;transition:all .2s;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.08em}
+.undo-compare-btn:hover{background:#1f1f1f;color:#fff}
+.undo-compare-btn.active{display:inline-block}
+</style>
+</head>
+<body class="antialiased min-h-screen bg-black">
+
+<!-- Header -->
+<header class="border-b border-white/5 py-4 px-6">
+  <div class="max-w-3xl mx-auto flex justify-between items-center">
+    <a href="https://beachside-premium.vercel.app" class="flex items-center gap-2">
+      <span class="font-urban font-bold text-lg tracking-widest text-white uppercase">Beachside <span class="text-trs-red">✦ Premium</span></span>
+    </a>
+    <a href="https://beachside-premium.vercel.app" class="text-xs text-gray-500 hover:text-white transition">← Back to Dashboard</a>
+  </div>
+</header>
+
+<!-- Remaster Engine -->
+<main class="max-w-3xl mx-auto px-6 pt-12 pb-16">
+  <div class="flex items-center gap-3 mb-6">
+    <div class="w-10 h-10 bg-trs-red/20 rounded-lg flex items-center justify-center"><span style="font-size:18px">✦</span></div>
+    <h2 class="font-display text-2xl uppercase tracking-widest text-white">AI Mastering Engine</h2>
+    <span class="badge">NEW</span>
+  </div>
+  <p class="text-gray-500 text-sm mb-8">Professional mastering powered by AI. Upload your track, pick a preset, get a release-ready master in seconds.</p>
+
+  <!-- Preset Selector -->
+  <h5 class="text-xs uppercase tracking-widest text-gray-400 mb-3">Select Preset</h5>
+  <div class="preset-grid" id="preset-grid">
+    <div class="preset-card active" onclick="selectPreset('clean',this)" style="--pc:#00d4ff">
+      <span class="preset-icon">✨</span>
+      <div class="preset-name">Clean Studio</div>
+      <div class="preset-desc">Transparent, streaming-ready</div>
+      <span class="preset-badge">-14 LUFS</span>
+    </div>
+    <div class="preset-card" onclick="selectPreset('warm',this)" style="--pc:#ff6b35">
+      <span class="preset-icon">🔥</span>
+      <div class="preset-name">Warm Analog</div>
+      <div class="preset-desc">Vintage tape saturation</div>
+      <span class="preset-badge">-12 LUFS</span>
+    </div>
+    <div class="preset-card" onclick="selectPreset('punchy',this)" style="--pc:#cc0000">
+      <span class="preset-icon">⚡</span>
+      <div class="preset-name">Punchy & Loud</div>
+      <div class="preset-desc">Club-ready, aggressive</div>
+      <span class="preset-badge">-9 LUFS</span>
+    </div>
+    <div class="preset-card" onclick="selectPreset('cinematic',this)" style="--pc:#9333ea">
+      <span class="preset-icon">🎬</span>
+      <div class="preset-name">Cinematic Wide</div>
+      <div class="preset-desc">Epic soundstage</div>
+      <span class="preset-badge">-14 LUFS</span>
+    </div>
+  </div>
+
+  <!-- File Upload -->
+  <div class="master-drop" id="master-drop" onclick="document.getElementById('master-file').click()">
+    <span class="master-drop-icon">🎵</span>
+    <div class="master-drop-text">Drop your track here</div>
+    <div class="master-drop-sub">MP3, WAV, FLAC — up to 100MB</div>
+  </div>
+  <input type="file" id="master-file" accept="audio/*" class="hidden" onchange="masterFileSelected(event)">
+  <div class="master-file-info" id="master-file-info">
+    <div class="master-file-icon">📄</div>
+    <div>
+      <div class="master-file-name" id="master-file-name"></div>
+      <div class="master-file-size" id="master-file-size"></div>
+    </div>
+    <button onclick="clearMasterFile()" style="background:none;border:none;color:#666;cursor:pointer;font-size:18px;margin-left:auto">&times;</button>
+  </div>
+
+  <!-- Reference Track -->
+  <div class="master-ref-upload" onclick="document.getElementById('master-ref-file').click()">
+    <span>📎</span> <span>+ Add reference track for EQ matching</span>
+    <span class="master-ref-info" id="master-ref-info"></span>
+  </div>
+  <input type="file" id="master-ref-file" accept="audio/*" class="hidden" onchange="masterRefSelected(event)">
+
+  <!-- Master Button -->
+  <button onclick="startMaster()" id="master-btn" class="gen-btn" disabled>✦ Master Track</button>
+
+  <!-- Progress -->
+  <div class="master-progress" id="master-progress">
+    <div class="master-progress-spinner"></div>
+    <div class="master-progress-text">
+      <div class="master-progress-title" id="master-progress-title">Mastering in progress...</div>
+      <div class="master-progress-sub" id="master-progress-sub">Running AI mastering pipeline</div>
+      <div class="master-progress-bar"><div class="master-progress-fill" id="master-progress-fill"></div></div>
+    </div>
+  </div>
+
+  <div id="master-err" class="hidden text-red-400 text-xs mt-2 bg-red-900/20 p-3 rounded-lg"></div>
+
+  <!-- A/B Comparison -->
+  <div class="compare-section" id="compare-section">
+    <h5 class="text-xs uppercase tracking-widest text-gray-400 mb-4">A/B Compare</h5>
+    <div class="compare-players">
+      <div class="compare-player">
+        <div class="compare-label original">◆ Original</div>
+        <audio id="master-original-audio" controls></audio>
+      </div>
+      <div class="compare-player">
+        <div class="compare-label mastered">✦ Mastered</div>
+        <audio id="master-result-audio" controls></audio>
+      </div>
+    </div>
+    <div class="master-actions">
+      <button onclick="downloadMaster()" class="download-btn active" id="master-download-btn">⬇ Download Mastered WAV</button>
+      <button onclick="resetMaster()" class="undo-compare-btn active" id="master-reset-btn">↻ Master Another Track</button>
+    </div>
+  </div>
+</main>
+
+<script>
+const API = 'https://api.beachsiderecordingstudio.us/api/premium';
+let masterState = { file: null, refFile: null, preset: 'clean', jobId: null, originalUrl: null, masteredUrl: null, polling: null };
+
+function selectPreset(p, el) {
+  masterState.preset = p;
+  document.querySelectorAll('.preset-card').forEach(function(c) { c.classList.remove('active') });
+  if (el) el.classList.add('active');
+}
+
+function masterFileSelected(e) {
+  var f = e.target.files[0];
+  if (!f) return;
+  masterState.file = f;
+  var info = document.getElementById('master-file-info');
+  var name = document.getElementById('master-file-name');
+  var size = document.getElementById('master-file-size');
+  var drop = document.getElementById('master-drop');
+  var btn = document.getElementById('master-btn');
+  if (info) info.classList.add('active');
+  if (name) name.textContent = f.name;
+  if (size) size.textContent = (f.size / 1024 / 1024).toFixed(1) + ' MB';
+  if (drop) drop.classList.add('has-file');
+  if (btn) btn.disabled = false;
+  var aud = document.getElementById('master-original-audio');
+  if (aud && f) { aud.src = URL.createObjectURL(f); }
+}
+
+function clearMasterFile() {
+  masterState.file = null;
+  document.getElementById('master-file-info').classList.remove('active');
+  document.getElementById('master-drop').classList.remove('has-file');
+  document.getElementById('master-btn').disabled = true;
+  document.getElementById('master-file').value = '';
+  var aud = document.getElementById('master-original-audio');
+  if (aud) { aud.src = ''; }
+  resetMaster();
+}
+
+function masterRefSelected(e) {
+  var f = e.target.files[0];
+  if (!f) return;
+  masterState.refFile = f;
+  var info = document.getElementById('master-ref-info');
+  if (info) { info.textContent = f.name; info.classList.add('active'); }
+}
+
+async function startMaster() {
+  if (!masterState.file) { showMasterErr('Upload a track first'); return; }
+  if (masterState.polling) { clearInterval(masterState.polling); }
+  var btn = document.getElementById('master-btn');
+  var progress = document.getElementById('master-progress');
+  var comp = document.getElementById('compare-section');
+  var err = document.getElementById('master-err');
+  if (btn) btn.disabled = true;
+  if (comp) comp.classList.remove('active');
+  if (err) err.classList.add('hidden');
+  if (progress) { progress.classList.add('active'); }
+  updateMasterProgress('Starting mastering engine...', 'Uploading audio');
+  try {
+    var fd = new FormData();
+    fd.append('file', masterState.file);
+    fd.append('preset', masterState.preset);
+    if (masterState.refFile) fd.append('reference', masterState.refFile);
+    var r = await fetch(API + '/master', { method: 'POST', body: fd });
+    var d = await r.json();
+    if (!r.ok) { showMasterErr(d.error || 'Upload failed'); if (progress) progress.classList.remove('active'); if (btn) btn.disabled = false; return; }
+    masterState.jobId = d.job_id;
+    var startTime = Date.now();
+    updateMasterProgress('AI mastering in progress...', d.preset ? 'Preset: ' + d.preset.toUpperCase() : 'Processing');
+    masterState.polling = setInterval(async function () {
+      var elapsed = (Date.now() - startTime) / 1000;
+      updateMasterProgressBar(Math.min(90, elapsed * 6));
+      updateMasterProgressSub(elapsed < 5 ? 'Running EQ matching...' : elapsed < 10 ? 'Applying compression & stereo imaging...' : elapsed < 15 ? 'Final limiting & loudness...' : 'Almost done...');
+      try {
+        var sr = await fetch(API + '/master/status/' + masterState.jobId);
+        var sd = await sr.json();
+        if (sd.status === 'done') {
+          clearInterval(masterState.polling);
+          masterState.polling = null;
+          updateMasterProgressBar(100);
+          updateMasterProgress('Mastering complete!', '✓ Your track has been professionally mastered');
+          var dlUrl = 'https://api.beachsiderecordingstudio.us/api/premium/master/download/' + masterState.jobId;
+          masterState.masteredUrl = dlUrl;
+          var aud = document.getElementById('master-result-audio');
+          if (aud) { aud.src = dlUrl; aud.load(); }
+          if (progress) setTimeout(function () { progress.classList.remove('active'); }, 1000);
+          if (comp) setTimeout(function () { comp.classList.add('active'); }, 500);
+          if (btn) btn.classList.add('hidden');
+        } else if (sd.status === 'error') {
+          clearInterval(masterState.polling);
+          masterState.polling = null;
+          showMasterErr(sd.error || 'Mastering failed');
+          if (progress) progress.classList.remove('active');
+          if (btn) btn.disabled = false;
+        }
+      } catch (e) {}
+    }, 2000);
+  } catch (e) {
+    showMasterErr('Connection error: ' + e.message);
+    if (progress) progress.classList.remove('active');
+    if (btn) btn.disabled = false;
+  }
+}
+
+function updateMasterProgress(title, sub) {
+  var t = document.getElementById('master-progress-title');
+  var s = document.getElementById('master-progress-sub');
+  if (t) t.textContent = title;
+  if (s) s.textContent = sub;
+}
+function updateMasterProgressSub(sub) { var s = document.getElementById('master-progress-sub'); if (s) s.textContent = sub; }
+function updateMasterProgressBar(pct) { var b = document.getElementById('master-progress-fill'); if (b) b.style.width = Math.min(100, pct) + '%'; }
+function showMasterErr(msg) {
+  var e = document.getElementById('master-err');
+  if (e) { e.textContent = msg; e.classList.remove('hidden'); setTimeout(function () { e.classList.add('hidden'); }, 8000); }
+}
+function downloadMaster() {
+  if (masterState.masteredUrl) window.open(masterState.masteredUrl, '_blank');
+}
+function resetMaster() {
+  if (masterState.polling) { clearInterval(masterState.polling); masterState.polling = null; }
+  masterState.jobId = null;
+  masterState.masteredUrl = null;
+  document.getElementById('compare-section').classList.remove('active');
+  document.getElementById('master-progress').classList.remove('active');
+  document.getElementById('master-btn').classList.remove('hidden');
+  document.getElementById('master-btn').disabled = !masterState.file;
+  document.getElementById('master-err').classList.add('hidden');
+  document.getElementById('master-progress-fill').style.width = '0%';
+  var aud = document.getElementById('master-result-audio'); if (aud) aud.src = '';
+}
+</script>
+</body>
+</html>
