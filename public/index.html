@@ -71,7 +71,7 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 </head>
 <body class="antialiased min-h-screen">
 
-<div id="debug-status" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#111;color:#0f0;font-size:11px;padding:4px 10px;font-family:monospace;display:none;border-bottom:1px solid #333"></div>
+<div id="debug-status" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#111;color:#0f0;font-size:11px;padding:4px 10px;font-family:monospace;display:block;border-bottom:1px solid #333">[READY] Page loaded</div>
 <div id="preloader"><div class="spinner"></div></div>
 <script>
 // Failsafe: hide preloader even if CDN scripts fail
@@ -124,6 +124,12 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 <div class="text-center"><div class="spinner mb-4"></div><p class="text-trs-red text-xs font-display uppercase tracking-widest">Please wait...</p></div>
 </div>
 </div>
+</div>
+
+<!-- TEST: Bypass login entirely -->
+<div style="position:fixed;bottom:10px;right:10px;z-index:99999;display:flex;gap:6px">
+<button onclick="dbg('TEST: calling forceShowView dashboard');forceShowView('dashboard')" style="background:#0f0;color:#000;border:none;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">TEST: Force Dashboard</button>
+<button onclick="dbg('TEST: calling forceShowView login');forceShowView('login')" style="background:#333;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer">TEST: Force Login</button>
 </div>
 
 <!-- ====== VIEW: DASHBOARD ====== -->
@@ -362,10 +368,6 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 <p class="text-gray-600 text-xs uppercase tracking-widest">Beachside Studios Premium Portal</p>
 <a href="https://beachside-website.vercel.app" class="text-gray-500 text-xs hover:text-trs-red transition mt-2 inline-block">← Back to Beachside Studios</a>
 </footer>
-
-<div id="auth-load" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-<div class="text-center"><div class="spinner mb-4"></div><p class="text-trs-red text-xs font-display uppercase tracking-widest">Please wait...</p></div>
-</div>
 
 <script>
 
