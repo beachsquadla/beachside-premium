@@ -89,9 +89,9 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 </a>
 <div class="flex items-center gap-4">
 <span id="nav-status" class="text-xs text-gray-500 hidden md:inline"></span>
-<button id="nav-signin" onclick="showView('login')" class="text-xs uppercase tracking-widest text-trs-red border border-trs-red px-3 py-1.5 rounded hover:bg-trs-red hover:text-white transition hidden">Sign In</button>
+<button id="nav-signin" onclick="forceShowView('login')" class="text-xs uppercase tracking-widest text-trs-red border border-trs-red px-3 py-1.5 rounded hover:bg-trs-red hover:text-white transition hidden">Sign In</button>
 <button id="nav-logout" onclick="logout()" class="text-xs uppercase tracking-widest text-gray-400 hover:text-trs-red transition hidden">Logout</button>
-<button id="nav-dash" onclick="showView('dashboard')" class="text-xs uppercase tracking-widest text-white hover:text-trs-red transition hidden">Dashboard</button>
+<button id="nav-dash" onclick="forceShowView('dashboard')" class="text-xs uppercase tracking-widest text-white hover:text-trs-red transition hidden">Dashboard</button>
 </div>
 </div>
 </header>
@@ -363,6 +363,10 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 <a href="https://beachside-website.vercel.app" class="text-gray-500 text-xs hover:text-trs-red transition mt-2 inline-block">← Back to Beachside Studios</a>
 </footer>
 
+<div id="auth-load" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+<div class="text-center"><div class="spinner mb-4"></div><p class="text-trs-red text-xs font-display uppercase tracking-widest">Please wait...</p></div>
+</div>
+
 <script>
 
 function dbg(m){var e=document.getElementById("debug-status");if(e){e.style.display="block";e.textContent="[DEBUG] "+m;console.log("[BS]",m)}}
@@ -387,6 +391,21 @@ function showView(id){
   if(el){el.classList.remove('hidden');el.classList.add('active')}
   window.scrollTo(0,0)
 }
+
+// Nuclear: bypass CSS classes entirely, use inline styles
+function forceShowView(id){
+  // 1. Force-hide the auth-load spinner overlay
+  var al=document.getElementById('auth-load');if(al){al.style.display='none';al.classList.add('hidden')}
+  // 2. Force-hide all view elements
+  document.querySelectorAll('.view').forEach(function(v){v.style.display='none';v.classList.add('hidden')});
+  // 3. Force-show the target view
+  var el=document.getElementById('view-'+id);
+  if(el){el.style.display='block';el.style.visibility='visible';el.style.opacity='1';el.classList.remove('hidden');el.classList.add('active')}
+  window.scrollTo(0,0)
+}
+
+// Also fix checkSession to use forceShowView on initial load
+
 
 function switchTab(t){
   var lf=document.getElementById('form-login'),rf=document.getElementById('form-reg'),lt=document.getElementById('ltab'),rt=document.getElementById('rtab');
@@ -440,8 +459,8 @@ async function login(){
     try{setToken(d.token)}catch(e){dbg('token save failed: '+e.message);authErr('Storage error — try enabling cookies');authLoad(false);return}
     user=d.user;dbg('user set, calling updateUI');
     try{updateUI()}catch(e){dbg('updateUI error: '+e.message)}
-    dbg('calling showView dashboard');
-    try{showView('dashboard')}catch(e){dbg('showView error: '+e.message)}
+    dbg('calling forceShowView dashboard');
+    try{forceShowView('dashboard')}catch(e){dbg('forceShowView error: '+e.message)}
     dbg('login complete!')
   }catch(err){
     authLoad(false);
@@ -462,13 +481,13 @@ async function register(){
     var r=await fetch(API+'/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,email:email,password:pass,inviteCode:code})});
     var d=await r.json();authLoad(false);
     if(!r.ok){authErr(d.error||'Registration failed');return}
-    setToken(d.token);user=d.user;updateUI();showView('dashboard')
+    setToken(d.token);user=d.user;updateUI();forceShowView('dashboard')
   }catch(err){authLoad(false);console.error('Register error:',err);authErr('Connection error')}
 }
 
 async function logout(){
   try{var t=getToken();if(t)await fetch(API+'/logout',{method:'POST',headers:{'x-auth-token':t}})}catch(e){}
-  clearToken();user=null;updateUI();showView('login')
+  clearToken();user=null;updateUI();forceShowView('login')
 }
 
 async function checkSession(){
@@ -476,7 +495,7 @@ async function checkSession(){
   try{
     var r=await fetch(API+'/me',{headers:{'x-auth-token':t}});
     var d=await r.json();
-    if(d.authenticated&&d.user){user=d.user;updateUI();showView('dashboard')}
+    if(d.authenticated&&d.user){user=d.user;updateUI();forceShowView('dashboard')}
   }catch(e){}
 }
 
