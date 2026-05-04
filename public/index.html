@@ -97,7 +97,7 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 </header>
 
 <!-- ====== VIEW: LOGIN ====== -->
-<div id="view-login" class="view active min-h-screen bg-black flex items-center justify-center px-6 pt-20">
+<div id="view-login" class="view hidden min-h-screen bg-black flex items-center justify-center px-6 pt-20">
 <div class="w-full max-w-md">
 <div class="text-center mb-10">
 <h2 class="text-3xl font-display font-bold uppercase tracking-widest text-white">Premium Studio</h2>
@@ -126,14 +126,8 @@ tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],display:
 </div>
 </div>
 
-<!-- TEST: Bypass login entirely -->
-<div style="position:fixed;bottom:10px;right:10px;z-index:99999;display:flex;gap:6px">
-<button onclick="dbg('TEST: calling forceShowView dashboard');forceShowView('dashboard')" style="background:#0f0;color:#000;border:none;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">TEST: Force Dashboard</button>
-<button onclick="dbg('TEST: calling forceShowView login');forceShowView('login')" style="background:#333;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer">TEST: Force Login</button>
-</div>
-
 <!-- ====== VIEW: DASHBOARD ====== -->
-<div id="view-dashboard" class="view hidden min-h-screen bg-black pt-24 pb-12">
+<div id="view-dashboard" class="view active min-h-screen bg-black pt-24 pb-12">
 <div class="max-w-6xl mx-auto px-6">
 <div class="flex justify-between items-center mb-10">
 <div>
@@ -381,10 +375,10 @@ function setToken(t){if(t)localStorage.setItem('bstoken',t)}
 function getToken(){return localStorage.getItem('bstoken')||''}
 function clearToken(){localStorage.removeItem('bstoken')}
 
-// Init
+// Init — skip login, go straight to dashboard
 window.addEventListener('load',function(){var p=document.getElementById('preloader');if(p)p.classList.add('hidden')});
 setTimeout(function(){var p=document.getElementById('preloader');if(p)p.classList.add('hidden')},5000);
-document.addEventListener('DOMContentLoaded',function(){try{if(typeof lucide!=='undefined')lucide.createIcons()}catch(e){}checkSession()});
+document.addEventListener('DOMContentLoaded',function(){try{if(typeof lucide!=='undefined')lucide.createIcons()}catch(e){}});
 
 // Navigation
 function showView(id){
