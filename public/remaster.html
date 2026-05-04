@@ -183,6 +183,7 @@ a,button,input,select{touch-action:manipulation}
 
 <script>
 const API = 'https://api.beachsiderecordingstudio.us/api/premium';
+function getToken(){return localStorage.getItem('bstoken')||''}
 let masterState = { file: null, refFile: null, preset: 'clean', jobId: null, originalUrl: null, masteredUrl: null, polling: null };
 
 function selectPreset(p, el) {
@@ -245,7 +246,7 @@ async function startMaster() {
     fd.append('file', masterState.file);
     fd.append('preset', masterState.preset);
     if (masterState.refFile) fd.append('reference', masterState.refFile);
-    var r = await fetch(API + '/master', { method: 'POST', body: fd });
+    var r = await fetch(API + '/master', { method: 'POST', headers: { 'x-auth-token': getToken() }, body: fd });
     var d = await r.json();
     if (!r.ok) { showMasterErr(d.error || 'Upload failed'); if (progress) progress.classList.remove('active'); if (btn) btn.disabled = false; return; }
     masterState.jobId = d.job_id;
@@ -256,7 +257,7 @@ async function startMaster() {
       updateMasterProgressBar(Math.min(90, elapsed * 6));
       updateMasterProgressSub(elapsed < 5 ? 'Running EQ matching...' : elapsed < 10 ? 'Applying compression & stereo imaging...' : elapsed < 15 ? 'Final limiting & loudness...' : 'Almost done...');
       try {
-        var sr = await fetch(API + '/master/status/' + masterState.jobId);
+        var sr = await fetch(API + '/master/status/' + masterState.jobId, { headers: { 'x-auth-token': getToken() } });
         var sd = await sr.json();
         if (sd.status === 'done') {
           clearInterval(masterState.polling);
