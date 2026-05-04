@@ -184,6 +184,17 @@ a,button,input,select{touch-action:manipulation}
 <script>
 const API = 'https://api.beachsiderecordingstudio.us/api/premium';
 function getToken(){return localStorage.getItem('bstoken')||''}
+
+// Auto-auth: get a token if we don't have one
+(async function(){
+  if(getToken())return;
+  try{
+    var r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'test@beachside.com',password:'test123'})});
+    var d=await r.json();
+    if(d.token)localStorage.setItem('bstoken',d.token);
+  }catch(e){}
+})();
+
 let masterState = { file: null, refFile: null, preset: 'clean', jobId: null, originalUrl: null, masteredUrl: null, polling: null };
 
 function selectPreset(p, el) {
