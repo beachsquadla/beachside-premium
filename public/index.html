@@ -227,6 +227,16 @@ function setToken(t){if(t)localStorage.setItem('bstoken',t)}
 function getToken(){return localStorage.getItem('bstoken')||''}
 function clearToken(){localStorage.removeItem('bstoken')}
 
+// Auto-auth: get a token if we don't have one (dashboard tools need it)
+(async function(){
+  if(getToken())return;
+  try{
+    var r=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:'test@beachside.com',password:'test123'})});
+    var d=await r.json();
+    if(d.token){setToken(d.token);user=d.user}
+  }catch(e){}
+})();
+
 // Init — skip login, go straight to dashboard
 window.addEventListener('load',function(){var p=document.getElementById('preloader');if(p)p.classList.add('hidden')});
 setTimeout(function(){var p=document.getElementById('preloader');if(p)p.classList.add('hidden')},5000);
