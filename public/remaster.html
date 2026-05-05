@@ -275,10 +275,16 @@ async function startMaster() {
           masterState.polling = null;
           updateMasterProgressBar(100);
           updateMasterProgress('Mastering complete!', '✓ Your track has been professionally mastered');
-          var dlUrl = 'https://api.beachsiderecordingstudio.us/api/premium/master/download/' + masterState.jobId + '?token=' + encodeURIComponent(getToken());
-          masterState.masteredUrl = dlUrl;
-          var aud = document.getElementById('master-result-audio');
-          if (aud) { aud.src = dlUrl; aud.load(); }
+          var baseUrl = 'https://api.beachsiderecordingstudio.us/api/premium/master/download/' + masterState.jobId;
+          masterState.masteredUrl = baseUrl;
+          // Fetch audio as blob with auth header (audio element can't send headers)
+          try {
+            var ar = await fetch(baseUrl, { headers: { 'x-auth-token': getToken() } });
+            var blob = await ar.blob();
+            var blobUrl = URL.createObjectURL(blob);
+            var aud = document.getElementById('master-result-audio');
+            if (aud) { aud.src = blobUrl; aud.load(); }
+          } catch(e) {}
           if (progress) setTimeout(function () { progress.classList.remove('active'); }, 1000);
           if (comp) setTimeout(function () { comp.classList.add('active'); }, 500);
           if (btn) btn.classList.add('hidden');
