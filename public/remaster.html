@@ -310,15 +310,24 @@ function showMasterErr(msg) {
   var e = document.getElementById('master-err');
   if (e) { e.textContent = msg; e.classList.remove('hidden'); setTimeout(function () { e.classList.add('hidden'); }, 8000); }
 }
-function downloadMaster() {
+async function downloadMaster() {
   if (!masterState.masteredUrl) return;
-  // Force download via fetch + blob instead of window.open
-  var a = document.createElement('a');
-  a.href = masterState.masteredUrl;
-  a.download = 'beachside-mastered.wav';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  try {
+    showMasterErr('Downloading...');
+    var r = await fetch(masterState.masteredUrl, { headers: { 'x-auth-token': getToken() } });
+    if (!r.ok) { showMasterErr('Download failed'); return; }
+    var blob = await r.blob();
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'beachside-mastered.wav';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 5000);
+  } catch(e) {
+    showMasterErr('Download error: ' + e.message);
+  }
 }
 function resetMaster() {
   if (masterState.polling) { clearInterval(masterState.polling); masterState.polling = null; }

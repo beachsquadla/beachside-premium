@@ -262,9 +262,6 @@ function forceShowView(id){
   window.scrollTo(0,0)
 }
 
-// Also fix checkSession to use forceShowView on initial load
-
-
 function switchTab(t){
   var lf=document.getElementById('form-login'),rf=document.getElementById('form-reg'),lt=document.getElementById('ltab'),rt=document.getElementById('rtab');
   if(t==='login'){
@@ -285,7 +282,7 @@ function openTool(tool){
   var el=document.getElementById('tool-'+tool);
   if(el){el.classList.remove('hidden');el.classList.add('active')}
   var btns=document.querySelectorAll('.tool-tab');var idx=0;
-  if(tool==='text-to-music')idx=0;else if(tool==='stem-separate')idx=1;else if(tool==='revamp')idx=2;else if(tool==='beat-variations')idx=3;else if(tool==='remaster')idx=4;
+  if(tool==='text-to-music')idx=0;else if(tool==='stem-separate')idx=1;else if(tool==='revamp')idx=2;else if(tool==='beat-variations')idx=3;
   if(btns&&btns[idx]){btns[idx].style.background='#cc0000';btns[idx].style.color='#fff';btns[idx].style.borderColor='#cc0000'}
   setTimeout(function(){try{if(typeof lucide!=='undefined')lucide.createIcons()}catch(e){}},50)
 }
@@ -382,7 +379,7 @@ function hideResult(id){var el=document.getElementById(id+'-result');if(el)el.cl
 // Text to Music
 async function generateMusic(){
   var prompt=document.getElementById('ttm-prompt');if(!prompt)return;
-  var txt=prompt.value.trim();if(!txt){showToolErr('ttm','Enter a prompt first');if(btn)btn.disabled=false;return}
+  var txt=prompt.value.trim();if(!txt){showToolErr('ttm','Enter a prompt first');return}
   var lyrics=document.getElementById('ttm-lyrics');
   var lyr=lyrics?lyrics.value.trim():'';
   var dur=document.getElementById('ttm-duration');var d=dur?parseInt(dur.value):15;
