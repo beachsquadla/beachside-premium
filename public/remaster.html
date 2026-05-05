@@ -167,11 +167,11 @@ a,button,input,select{touch-action:manipulation}
     <div class="compare-players">
       <div class="compare-player">
         <div class="compare-label original">◆ Original</div>
-        <audio id="master-original-audio" controls></audio>
+        <audio id="master-original-audio" controls crossorigin="anonymous"></audio>
       </div>
       <div class="compare-player">
         <div class="compare-label mastered">✦ Mastered</div>
-        <audio id="master-result-audio" controls></audio>
+        <audio id="master-result-audio" controls crossorigin="anonymous"></audio>
       </div>
     </div>
     <div class="master-actions">
@@ -275,7 +275,7 @@ async function startMaster() {
           masterState.polling = null;
           updateMasterProgressBar(100);
           updateMasterProgress('Mastering complete!', '✓ Your track has been professionally mastered');
-          var dlUrl = 'https://api.beachsiderecordingstudio.us/api/premium/master/download/' + masterState.jobId;
+          var dlUrl = 'https://api.beachsiderecordingstudio.us/api/premium/master/download/' + masterState.jobId + '?token=' + encodeURIComponent(getToken());
           masterState.masteredUrl = dlUrl;
           var aud = document.getElementById('master-result-audio');
           if (aud) { aud.src = dlUrl; aud.load(); }
@@ -311,7 +311,14 @@ function showMasterErr(msg) {
   if (e) { e.textContent = msg; e.classList.remove('hidden'); setTimeout(function () { e.classList.add('hidden'); }, 8000); }
 }
 function downloadMaster() {
-  if (masterState.masteredUrl) window.open(masterState.masteredUrl, '_blank');
+  if (!masterState.masteredUrl) return;
+  // Force download via fetch + blob instead of window.open
+  var a = document.createElement('a');
+  a.href = masterState.masteredUrl;
+  a.download = 'beachside-mastered.wav';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 function resetMaster() {
   if (masterState.polling) { clearInterval(masterState.polling); masterState.polling = null; }
