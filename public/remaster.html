@@ -251,21 +251,59 @@ async function startMaster() {
   if (comp) comp.classList.remove('active');
   if (err) err.classList.add('hidden');
   if (progress) { progress.classList.add('active'); }
-  updateMasterProgress('Starting mastering engine...', 'Uploading audio');
+  updateMasterProgress('Starting mastering engine...', 'Preparing upload\u2026');
+  updateMasterProgressBar(0);
   try {
     var fd = new FormData();
     fd.append('file', masterState.file);
     fd.append('preset', masterState.preset);
     if (masterState.refFile) fd.append('reference', masterState.refFile);
-    var r = await fetch(API + '/master', { method: 'POST', headers: { 'x-auth-token': getToken() }, body: fd });
-    var d = await r.json();
-    if (!r.ok) { showMasterErr(d.error || 'Upload failed'); if (progress) progress.classList.remove('active'); if (btn) btn.disabled = false; return; }
+
+    // Use XHR so we can show real upload progress (fetch has no upload progress API)
+    var d = await new Promise(function(resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', API + '/master');
+      xhr.setRequestHeader('x-auth-token', getToken());
+      xhr.timeout = 120000; // 2-minute timeout — prevents hanging forever
+
+      xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+          var pct = Math.round((e.loaded / e.total) * 100);
+          updateMasterProgressBar(pct);
+          updateMasterProgress('Uploading audio\u2026', pct + '% complete');
+        } else {
+          updateMasterProgress('Uploading audio\u2026', (e.loaded / 1024 / 1024).toFixed(1) + ' MB sent');
+        }
+      };
+
+      xhr.onload = function() {
+        try { resolve(JSON.parse(xhr.responseText)); }
+        catch(e) { reject(new Error('Invalid server response')); }
+      };
+
+      xhr.onerror = function() { reject(new Error('Network error — check your connection')); };
+      xhr.ontimeout = function() { reject(new Error('Upload timed out — try again on WiFi')); };
+      xhr.send(fd);
+    });
+
+    if (d.error) { showMasterErr(d.error || 'Upload failed'); if (progress) progress.classList.remove('active'); if (btn) btn.disabled = false; return; }
     masterState.jobId = d.job_id;
     var startTime = Date.now();
+    var maxPollTime = 300000; // 5-minute safety timeout
     updateMasterProgress('AI mastering in progress...', d.preset ? 'Preset: ' + d.preset.toUpperCase() : 'Processing');
+    updateMasterProgressBar(10);
     masterState.polling = setInterval(async function () {
       var elapsed = (Date.now() - startTime) / 1000;
-      updateMasterProgressBar(Math.min(90, elapsed * 6));
+      // Safety: stop polling after 5 minutes
+      if (elapsed > 300) {
+        clearInterval(masterState.polling);
+        masterState.polling = null;
+        showMasterErr('Mastering timed out — please try again');
+        if (progress) progress.classList.remove('active');
+        if (btn) btn.disabled = false;
+        return;
+      }
+      updateMasterProgressBar(Math.min(90, 10 + elapsed * 1.6));
       updateMasterProgressSub(elapsed < 5 ? 'Running EQ matching...' : elapsed < 10 ? 'Applying compression & stereo imaging...' : elapsed < 15 ? 'Final limiting & loudness...' : 'Almost done...');
       try {
         var sr = await fetch(API + '/master/status/' + masterState.jobId, { headers: { 'x-auth-token': getToken() } });
