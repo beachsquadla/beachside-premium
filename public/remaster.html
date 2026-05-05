@@ -123,6 +123,34 @@ a,button,input,select{touch-action:manipulation}
     </div>
   </div>
 
+  <h5 class="text-xs uppercase tracking-widest text-gray-400 mb-3 mt-1" style="color:#cc0000">✦ Creative Remix Presets</h5>
+  <div class="preset-grid">
+    <div class="preset-card" onclick="selectPreset('club_remix',this)" style="--pc:#ff00ff">
+      <span class="preset-icon">🎪</span>
+      <div class="preset-name">Club Remix ✦</div>
+      <div class="preset-desc">Festival-ready, layers, builds</div>
+      <span class="preset-badge">-9 LUFS</span>
+    </div>
+    <div class="preset-card" onclick="selectPreset('rnb_enhance',this)" style="--pc:#ff69b4">
+      <span class="preset-icon">🌹</span>
+      <div class="preset-name">R&B Enhance ✦</div>
+      <div class="preset-desc">Rich harmonies, warm pads</div>
+      <span class="preset-badge">-12 LUFS</span>
+    </div>
+    <div class="preset-card" onclick="selectPreset('hiphop_remix',this)" style="--pc:#ff4500">
+      <span class="preset-icon">💎</span>
+      <div class="preset-name">Hip-Hop Remix ✦</div>
+      <div class="preset-desc">808s, ad-libs, aggressive</div>
+      <span class="preset-badge">-9 LUFS</span>
+    </div>
+    <div class="preset-card" onclick="selectPreset('cinematic_atmos',this)" style="--pc:#7b68ee">
+      <span class="preset-icon">🌌</span>
+      <div class="preset-name">Cinematic Atmos ✦</div>
+      <div class="preset-desc">Evolving textures, epic</div>
+      <span class="preset-badge">-14 LUFS</span>
+    </div>
+  </div>
+
   <!-- File Upload -->
   <div class="master-drop" id="master-drop" onclick="document.getElementById('master-file').click()">
     <span class="master-drop-icon">🎵</span>
@@ -304,7 +332,8 @@ async function startMaster() {
         return;
       }
       updateMasterProgressBar(Math.min(90, 10 + elapsed * 1.6));
-      updateMasterProgressSub(elapsed < 5 ? 'Running EQ matching...' : elapsed < 10 ? 'Applying compression & stereo imaging...' : elapsed < 15 ? 'Final limiting & loudness...' : 'Almost done...');
+      var isCreative = ['club_remix','rnb_enhance','hiphop_remix','cinematic_atmos'].includes(masterState.preset);
+      updateMasterProgressSub(elapsed < 8 ? (isCreative ? 'Adding vocal harmonies & doubles\u2026' : 'Running EQ matching\u2026') : elapsed < 16 ? (isCreative ? 'Creating atmospheric textures\u2026' : 'Applying compression & stereo imaging\u2026') : elapsed < 25 ? (isCreative ? 'Mixing creative layers\u2026' : 'Running DSP mastering chain\u2026') : elapsed < 35 ? 'Final limiting & loudness\u2026' : 'Almost done\u2026');
       try {
         var sr = await fetch(API + '/master/status/' + masterState.jobId, { headers: { 'x-auth-token': getToken() } });
         var sd = await sr.json();
